@@ -1,0 +1,12 @@
+/build/
+/out/
+/CMakeUserPresets.json
+document/
+/include/*
+!/include/objet/
+!/include/objet/**
+.agents
+.vscode
+/Librairies
+
+CMakePresets.json
