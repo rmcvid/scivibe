@@ -16,7 +16,8 @@ namespace scivibe {
 
         SCIVIBE_CORE_INFO("Application running...");
         WindowResizeEvent e(1280, 720);
-        SCIVIBE_TRACE("{}", fmt::streamed(e));
+        SCIVIBE_TRACE(e);
+
         while (true) {
             
         }

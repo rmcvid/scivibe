@@ -3,6 +3,9 @@
 #pragma once
 #include <string>
 #include <functional>
+#include <ostream>
+#include <type_traits>
+#include <spdlog/fmt/ostr.h>
 
 namespace scivibe {
 
@@ -67,3 +70,11 @@ namespace scivibe {
     }
 
 } // namespace scivibe
+
+// overload << pour le log
+template <typename T>
+struct fmt::formatter<T, 
+    char,
+    std::enable_if_t<std::is_base_of_v<scivibe::Event, T>>
+    > 
+    : fmt::ostream_formatter {};

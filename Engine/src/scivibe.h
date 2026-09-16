@@ -8,7 +8,6 @@
 
 #include "objet/color.hpp"
 #include "objet/fleche.hpp"
-#include "objet/test.hpp"
 #include "log/log.hpp"
 #include "shader/shader.h"
 
