@@ -1,3 +1,12 @@
 [submodule "Engine/external/glfw"]
 	path = Engine/external/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "Engine/external/glm"]
+	path = Engine/external/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "Engine/external/miniaudio"]
+	path = Engine/external/miniaudio
+	url = https://github.com/mackron/miniaudio.git
+[submodule "Engine/external/spdlog"]
+	path = Engine/external/spdlog
+	url = https://github.com/gabime/spdlog.git
