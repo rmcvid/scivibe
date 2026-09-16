@@ -1,6 +1,5 @@
 #pragma once
 #include "event.hpp"
-#include <sstream>
 
 namespace scivibe {
     

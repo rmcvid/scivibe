@@ -28,6 +28,7 @@ add_library(scivibe_glad STATIC external/glad/src/glad.c)
 target_include_directories(scivibe_glad PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/external/glad/include")
 target_link_libraries(scivibe_glad PUBLIC ${CMAKE_DL_LIBS})
 
+
 # Compile miniaudio's implementation once, rather than in every application.
 add_library(scivibe_miniaudio STATIC src/miniaudio.c)
 target_include_directories(scivibe_miniaudio PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/external/miniaudio")
@@ -53,6 +54,10 @@ if(SCIVIBE_SHADERS)
     set_source_files_properties(${SCIVIBE_SHADERS} PROPERTIES HEADER_FILE_ONLY TRUE)
 endif()
 add_library(scivibe STATIC ${SCIVIBE_SOURCES} ${SCIVIBE_SHADERS})
+
+target_precompile_headers(scivibe PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/pch/pch.hpp"
+)
 
 add_library(scivibe::engine ALIAS scivibe)
 target_compile_features(scivibe PUBLIC cxx_std_17)

@@ -1,8 +1,8 @@
 #ifndef FLECHE_HPP
 #define FLECHE_HPP
+#include "pch/pch.hpp"
 #include <glm/glm.hpp>
 #include "objet/color.hpp"
-#include <vector>
 
 
 namespace scivibe {

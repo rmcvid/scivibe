@@ -1,6 +1,7 @@
 #pragma once
+#include "pch/pch.hpp"
 #include "event.hpp"
-#include <sstream>
+
 
 namespace scivibe {
     class WindowResizeEvent : public Event {
