@@ -2,11 +2,6 @@
 /out/
 /CMakePresets.json
 document/
-Engine/include/*
-!Engine/include/scivibe.h
-!Engine/include/objet/
-!Engine/include/log/
-!/Engine/include/objet/**
 
 .agents
 .vscode/*
@@ -17,4 +12,3 @@ Engine/include/*
 !.vscode/c_cpp_properties.json
 Engine/Librairies
 
-Engine/src/scivibe.cpp

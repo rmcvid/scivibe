@@ -1,11 +1,48 @@
 # Projet
 
+## To do
+- Lié la fenetre d'openGl à ffmpeg afin de pouvoir enregistrée tout ce qui s'affiche à l'écran
+- Developper un log system
+- il faut passer la librairie en dll plutot qu'en statique, macro à définir. Gerer le cross platforme pour du x64
+
+
+## fichier utilisé
+Glad permet d'utilisé openGL directement ( il faut rester en dessous de 4.3 pour mac)
+ffmpeg permet de transformer la fenetre directement en vidéo
+??? pour gerer les police d'ecriture, il faut absolument conserver le format latex, pseudo latex peut etre réutilisé mais il devrait être revu et porter en cpp
+
+## Architecture
+Lié des listes pour chaque fragment shader afin de minimiser les appels GPU ?
+Dans un premier temps les objets auront leu propres .hpp
+
+## très long terme
+API pour appeler les fonctions creer sans devoir tout recompiler ?
+
 ## Compiler et utiliser le moteur
 
 Le moteur est une bibliothèque statique C++17, accessible avec la cible CMake
-`scivibe::engine`. GLFW, GLM et miniaudio restent des sous-modules Git. Les sources
-générées de GLAD (OpenGL 3.3 core) sont incluses dans `Engine/include/glad`.
-`Engine/src/main.cpp` est conservé mais n'est pas compilé.
+`scivibe::engine`. GLFW, GLM, miniaudio et spdlog restent des sous-modules Git.
+Les sources générées de GLAD (OpenGL 3.3 core) sont incluses dans
+`Engine/external/glad`.
+
+Le code du moteur est regroupé dans `Engine/src` : `scivibe.h`, `log/`, `objet/`
+et `shader/`. Les dépendances tierces restent dans `Engine/external` ; il n'y a
+plus de dossier `Engine/include`. CMake transmet `Engine/src` comme chemin
+d'inclusion aux applications, qui peuvent toujours écrire `#include <scivibe.h>`.
+
+CMake découvre récursivement les `.cpp`, `.hpp` et `.h` de `Engine/src` avec
+`CONFIGURE_DEPENDS`. Ajouter, par exemple, `Engine/src/event/event.cpp` et
+`event.hpp`, puis lancer une compilation suffit : aucun changement de CMake
+n'est nécessaire. Les suppressions sont également détectées. Les `.cpp` sont
+compilés ; les en-têtes sont utilisés via les `#include`. Pour exposer une
+nouvelle API par l'en-tête unique, ajouter son `#include` dans `src/scivibe.h`.
+Les fichiers contenant un `main()` doivent rester dans une application comme
+`sandbox`, hors de `Engine/src`.
+
+Les shaders `.vs`, `.fs` et `.glsl` sont recensés comme ressources, sans être
+compilés par le compilateur C++. Leur chargement et leur compilation OpenGL
+restent à effectuer par l'application. `src/miniaudio.c` est compilé séparément,
+une seule fois, dans la cible `scivibe_miniaudio`.
 
 ```sh
 git submodule update --init --recursive
@@ -79,21 +116,3 @@ Run and Debug ci-dessus, qui lient aussi le moteur et ses dépendances.
 
 Si VS Code était déjà ouvert avec l'ancienne configuration, exécuter
 `Developer: Reload Window`, puis `CMake: Configure` et sélectionner `sandbox`.
-
-## To do
-Préparer l'audio avec miniaudio, le .h est déja là et est normalement auto suffisant
-Lié la fenetre d'openGl à ffmpeg afin de pouvoir enregistrée tout ce qui s'affiche à l'écran
-Developper un log system
-
-
-## fichier utilisé
-Glad permet d'utilisé openGL directement ( il faut rester en dessous de 4.3 pour mac)
-ffmpeg permet de transformer la fenetre directement en vidéo
-??? pour gerer les police d'ecriture, il faut absolument conserver le format latex, pseudo latex peut etre réutilisé mais il devrait être revu et porter en cpp
-
-## Architecture
-Lié des listes pour chaque fragment shader afin de minimiser les appels GPU ?
-Dans un premier temps les objets auront leu propres .hpp
-
-## très long terme
-API pour appeler les fonctions creer sans devoir tout recompiler ?

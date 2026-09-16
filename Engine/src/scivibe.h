@@ -10,3 +10,12 @@
 #include "objet/fleche.hpp"
 #include "objet/test.hpp"
 #include "log/log.hpp"
+#include "shader/shader.h"
+
+#include "events/event.hpp"
+#include "events/applicationEvent.hpp"
+#include "events/keyEvent.hpp"
+#include "events/mouseEvent.hpp"
+
+
+#include "application/application.hpp"
