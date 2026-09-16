@@ -1,6 +1,6 @@
 #ifndef FLECHE_HPP
 #define FLECHE_HPP
-#include "glm.hpp"
+#include <glm/glm.hpp>
 #include "objet/color.hpp"
 #include <vector>
 

@@ -1,0 +1,22 @@
+{
+  "cmake.useCMakePresets": "always",
+  "cmake.configureOnOpen": true,
+  "cmake.configureOnEdit": true,
+  "cmake.automaticReconfigure": true,
+  "cmake.useVsDeveloperEnvironment": "never",
+  "cmake.buildBeforeRun": true,
+  "cmake.setBuildTargetSameAsLaunchTarget": true,
+  "cmake.launchBehavior": "reuseTerminal",
+  "cmake.pinnedCommands": [
+    "cmake.configure",
+    "cmake.build",
+    "cmake.selectLaunchTarget",
+    "cmake.launchTarget"
+  ],
+  "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+  "cmake.sourceDirectory": "${workspaceFolder}",
+  "cmake.debugConfig": {
+    "MIMode": "gdb",
+    "miDebuggerPath": "C:/msys64/ucrt64/bin/gdb.exe"
+  }
+}
