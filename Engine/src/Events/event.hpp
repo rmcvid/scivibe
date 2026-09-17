@@ -1,7 +1,9 @@
 
-// #include core ?
 #pragma once
-#include "pch/pch.hpp"
+#include <ostream>
+#include <string>
+#include <type_traits>
+#include <spdlog/fmt/ostr.h>
 
 namespace scivibe {
 

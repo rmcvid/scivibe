@@ -1,15 +1,15 @@
-
-/*
 #pragma once
 
-#ifdef SCIVIBE_PLATFORM_WINDOWS
-    #ifdef SCIVIBE_BUILD_DLL
+// SCIVIBE_BUILD_DLL is defined only while compiling the engine itself.
+#if defined(_WIN32)
+    #if defined(SCIVIBE_BUILD_DLL)
         #define SCIVIBE_API __declspec(dllexport)
     #else
         #define SCIVIBE_API __declspec(dllimport)
     #endif
+#elif defined(__GNUC__) || defined(__clang__)
+    #define SCIVIBE_API __attribute__((visibility("default")))
 #else
-    #error SciVibe only supports Windows!
+    #define SCIVIBE_API
 #endif
-*/
 

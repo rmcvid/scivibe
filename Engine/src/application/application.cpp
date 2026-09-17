@@ -1,6 +1,6 @@
 #include "application/application.hpp"
 #include "log/log.hpp"
-#include "events/applicationEvent.hpp"
+#include "Events/applicationEvent.hpp"
 
 namespace scivibe {
 

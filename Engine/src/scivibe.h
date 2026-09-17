@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/core.hpp"
+
 // GLAD must precede GLFW and any other OpenGL headers.
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -11,10 +13,10 @@
 #include "log/log.hpp"
 #include "shader/shader.h"
 
-#include "events/event.hpp"
-#include "events/applicationEvent.hpp"
-#include "events/keyEvent.hpp"
-#include "events/mouseEvent.hpp"
+#include "Events/event.hpp"
+#include "Events/applicationEvent.hpp"
+#include "Events/keyEvent.hpp"
+#include "Events/mouseEvent.hpp"
 
 
 #include "application/application.hpp"

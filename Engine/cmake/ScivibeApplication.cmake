@@ -20,5 +20,17 @@ endfunction()
 macro(scivibe_add_executable target)
     add_executable(${target} ${ARGN})
     target_link_libraries(${target} PRIVATE scivibe::engine)
+    if(WIN32)
+        # Run even when only the engine changed and the executable is up to date.
+        add_custom_target(${target}_runtime
+            COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:${target}>"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                $<TARGET_RUNTIME_DLLS:${target}> "$<TARGET_FILE_DIR:${target}>"
+            DEPENDS scivibe
+            COMMAND_EXPAND_LISTS
+            VERBATIM
+        )
+        add_dependencies(${target} ${target}_runtime)
+    endif()
     _scivibe_copy_mingw_runtime(${target})
 endmacro()

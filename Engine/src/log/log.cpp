@@ -10,4 +10,16 @@ namespace scivibe {
         s_CoreLogger->set_level(spdlog::level::trace);
         s_ClientLogger->set_level(spdlog::level::trace);
     }
+
+    void Log::info(const char* message) {
+        s_CoreLogger->info("{}", message);
+    }
+
+    void Log::warning(const char* message) {
+        s_CoreLogger->warn("{}", message);
+    }
+
+    void Log::error(const char* message) {
+        s_CoreLogger->error("{}", message);
+    }
 }

@@ -3,7 +3,6 @@
 ## To do
 - Lié la fenetre d'openGl à ffmpeg afin de pouvoir enregistrée tout ce qui s'affiche à l'écran
 - Developper un log system
-- il faut passer la librairie en dll plutot qu'en statique, macro à définir. Gerer le cross platforme pour du x64
 
 
 ## fichier utilisé
@@ -20,10 +19,30 @@ API pour appeler les fonctions creer sans devoir tout recompiler ?
 
 ## Compiler et utiliser le moteur
 
-Le moteur est une bibliothèque statique C++17, accessible avec la cible CMake
+Le moteur est une bibliothèque dynamique C++17, accessible avec la cible CMake
 `scivibe::engine`. GLFW, GLM, miniaudio et spdlog restent des sous-modules Git.
 Les sources générées de GLAD (OpenGL 3.3 core) sont incluses dans
 `Engine/external/glad`.
+
+CMake 3.21 ou plus récent est requis. Le moteur produit une DLL sous Windows,
+une `.so` sous Linux et une `.dylib` sous macOS. Les dépendances conservent leur
+configuration actuelle ; passer le moteur en `SHARED` n'active pas globalement
+`BUILD_SHARED_LIBS`.
+
+`core/core.hpp` définit `SCIVIBE_API`. CMake définit `SCIVIBE_BUILD_DLL` uniquement
+pour compiler le moteur : la macro exporte alors ses symboles sous Windows et
+les importe dans les clients. Sous GCC/Clang sur Linux/macOS, elle leur donne
+une visibilité publique. Pour une classe dont les méthodes sont implémentées
+dans un `.cpp` du moteur, écrire `class SCIVIBE_API MaClasse`. Pour une fonction
+libre, écrire par exemple `SCIVIBE_API void maFonction();`. Ne pas répéter la
+macro sur chaque méthode d'une classe déjà exportée. Les fonctions inline et
+templates entièrement définis dans les headers n'ont pas besoin de cette macro.
+`CreateApplication()` reste une éventuelle fabrique définie par le client.
+
+Le PCH reste privé au moteur. Les headers publics incluent directement leurs
+dépendances. L'interface expose des types C++ et spdlog : moteur et application
+doivent utiliser des compilateurs, bibliothèques standard et configurations de
+runtime compatibles ; une DLL MinGW n'est pas interchangeable avec une DLL MSVC.
 
 Le code du moteur est regroupé dans `Engine/src` : `scivibe.h`, `log/`, `objet/`
 et `shader/`. Les dépendances tierces restent dans `Engine/external` ; il n'y a
@@ -52,8 +71,10 @@ cmake --build build --parallel
 
 Avec MinGW sous Windows, configurer avec `cmake -S . -B build -G "MinGW Makefiles"`
 depuis un terminal où GCC et mingw32-make sont accessibles. Lancer ensuite
-`./build/sandbox/sandbox.exe`. La macro copie les DLL du runtime MinGW disponibles
-à côté de l'exécutable. Avec un générateur multi-configuration, l'exécutable se
+`./build/sandbox/sandbox.exe`. La macro copie la DLL du moteur et les DLL de ses
+dépendances dynamiques à côté de l'exécutable, ainsi que les DLL du runtime MinGW
+disponibles. La copie est vérifiée à chaque construction de l'application, même
+si seule la DLL du moteur a changé. Avec un générateur multi-configuration, l'exécutable se
 trouve dans le sous-dossier de la configuration choisie (par exemple `Debug`).
 
 La sandbox utilise simplement :
@@ -68,7 +89,8 @@ Et dans `test.cpp`, un seul en-tête donne accès aux objets et aux dépendances
 #include <scivibe.h>
 
 int main() {
-    scivibe::print();
+    scivibe::Log::Init();
+    SCIVIBE_INFO("SciVibe prêt");
     scivibe::Fleche fleche({0.0f, 0.0f}, {100.0f, 0.0f},
                           scivibe::Color(1.0f, 0.0f, 0.0f));
     return fleche.getVertices().empty() ? 1 : 0;
@@ -78,7 +100,7 @@ int main() {
 Pour réutiliser le moteur depuis un autre projet CMake :
 
 ```cmake
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.21)
 project(mon_application LANGUAGES C CXX)
 add_subdirectory(chemin/vers/scivibe/Engine scivibe-engine)
 scivibe_add_executable(mon_application main.cpp autres_objets.cpp)
@@ -90,9 +112,25 @@ d'inclusion, C++17 et les dépendances sont transmis automatiquement. Miniaudio
 est compilé une seule fois par le moteur ; ne pas définir
 `MINIAUDIO_IMPLEMENTATION` dans l'application. L'initialisation d'une fenêtre,
 du contexte OpenGL et de GLAD reste à faire par l'application avant tout dessin.
+La copie automatique des DLL sous Windows est fournie par
+`scivibe_add_executable` ; si l'on utilise seulement `target_link_libraries`,
+il faut aussi rendre ces DLL accessibles à l'exécutable.
 
 Pour compiler uniquement le moteur :
 `cmake -S . -B build -DSCIVIBE_BUILD_SANDBOX=OFF`.
+
+Pour vérifier l'API depuis un client sans PCH (méthodes exportées, loggers
+partagés, événements et destruction virtuelle d'une application dérivée) :
+
+```sh
+cmake -S . -B build -DSCIVIBE_BUILD_TESTS=ON
+cmake --build build --parallel
+ctest --test-dir build --output-on-failure
+```
+
+Avec Visual Studio, ajouter `--config Debug` à la compilation et `-C Debug` à
+CTest. Les mécanismes d'export et le code PIC sont configurés pour les autres
+plateformes ; leur fonctionnement doit encore être validé sous Linux/macOS.
 
 ## Lancer depuis VS Code (Windows / MinGW)
 

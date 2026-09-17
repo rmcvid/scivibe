@@ -1,0 +1,2 @@
+scivibe_add_executable(scivibe_shared_api_test shared_api.cpp)
+add_test(NAME scivibe.shared_api COMMAND scivibe_shared_api_test)

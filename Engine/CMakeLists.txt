@@ -1,5 +1,8 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.21)
 project(scivibe_engine LANGUAGES C CXX)
+
+# Static dependencies linked into the shared engine need PIC on ELF platforms.
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Keep dependencies local and reproducible through the existing submodules.
 foreach(dependency IN ITEMS glfw glm miniaudio spdlog)
@@ -53,7 +56,11 @@ file(GLOB_RECURSE SCIVIBE_SHADERS CONFIGURE_DEPENDS
 if(SCIVIBE_SHADERS)
     set_source_files_properties(${SCIVIBE_SHADERS} PROPERTIES HEADER_FILE_ONLY TRUE)
 endif()
-add_library(scivibe STATIC ${SCIVIBE_SOURCES} ${SCIVIBE_SHADERS})
+add_library(scivibe SHARED ${SCIVIBE_SOURCES} ${SCIVIBE_SHADERS})
+set_target_properties(scivibe PROPERTIES
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN YES
+)
 
 target_precompile_headers(scivibe PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src/pch/pch.hpp"
@@ -61,7 +68,10 @@ target_precompile_headers(scivibe PRIVATE
 
 add_library(scivibe::engine ALIAS scivibe)
 target_compile_features(scivibe PUBLIC cxx_std_17)
-target_compile_definitions(scivibe PUBLIC GLFW_INCLUDE_NONE)
+target_compile_definitions(scivibe
+    PRIVATE SCIVIBE_BUILD_DLL
+    PUBLIC GLFW_INCLUDE_NONE
+)
 target_include_directories(scivibe PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(scivibe PUBLIC
     scivibe_glad
