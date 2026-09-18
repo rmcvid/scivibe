@@ -13,3 +13,13 @@
     #define SCIVIBE_API
 #endif
 
+// à definir dans le cmake ?
+#ifdef SCIVIBE_ENABLE_ASSERT
+    #define SCIVIBE_ASSERT(x,...){ if(!(x)){SCIVIBE_ERROR("Assertion failled:{0}",__VA_ARGS__); __debugbreak(); }}
+    #define SCIVIBE_CORE_ASSERT(x,...){ if(!(x)){SCIVIBE_CORE_ERROR("Assertion failled:{0}",__VA_ARGS__); __debugbreak(); }}
+#else
+    #define SCIVIBE_ASSERT(x,...)
+    #define SCIVIBE_CORE_ASSERT(x,...)    
+#endif
+
+

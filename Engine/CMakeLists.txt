@@ -31,6 +31,7 @@ add_library(scivibe_glad STATIC external/glad/src/glad.c)
 target_include_directories(scivibe_glad PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/external/glad/include")
 target_link_libraries(scivibe_glad PUBLIC ${CMAKE_DL_LIBS})
 
+#add_library(scivibe_glwf STATIC external/glfw)
 
 # Compile miniaudio's implementation once, rather than in every application.
 add_library(scivibe_miniaudio STATIC src/miniaudio.c)
