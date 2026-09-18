@@ -18,5 +18,8 @@
 #include "Events/keyEvent.hpp"
 #include "Events/mouseEvent.hpp"
 
+#include "layer/layer.hpp"
 
 #include "application/application.hpp"
+
+#include "core/entryPoint.hpp"
