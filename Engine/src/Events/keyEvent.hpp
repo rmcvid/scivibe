@@ -55,4 +55,5 @@ namespace scivibe {
         EVENT_CLASS_TYPE(KeyTyped)
     };
 
+
 } // namespace scivibe

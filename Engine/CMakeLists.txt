@@ -66,6 +66,20 @@ target_precompile_headers(scivibe PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src/pch/pch.hpp"
 )
 
+add_library(scivibe_imgui STATIC
+    external/imgui/imgui.cpp
+    external/imgui/imgui_draw.cpp
+    external/imgui/imgui_tables.cpp
+    external/imgui/imgui_widgets.cpp
+    external/imgui/imgui_demo.cpp
+)
+
+target_include_directories(scivibe_imgui PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/external/imgui"
+)
+
+target_compile_features(scivibe_imgui PUBLIC cxx_std_17)
+
 add_library(scivibe::engine ALIAS scivibe)
 target_compile_features(scivibe PUBLIC cxx_std_17)
 target_compile_definitions(scivibe
@@ -74,12 +88,19 @@ target_compile_definitions(scivibe
     $<$<CONFIG:Debug>:SCIVIBE_ENABLE_ASSERT>
 )
 target_include_directories(scivibe PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(scivibe PUBLIC
-    scivibe_glad
-    glfw glm::glm
-    scivibe_miniaudio
-    OpenGL::GL
+target_link_libraries(scivibe 
+    PRIVATE
+        scivibe_imgui
+    PUBLIC
+        scivibe_glad
+        glfw glm::glm
+        scivibe_miniaudio
+        OpenGL::GL
     spdlog::spdlog
+)
+
+target_include_directories(scivibe PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/external/imgui/backends"
 )
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/ScivibeApplication.cmake")

@@ -23,3 +23,5 @@
 #include "application/application.hpp"
 
 #include "core/entryPoint.hpp"
+
+#include "gui/imGuiLayer.hpp"

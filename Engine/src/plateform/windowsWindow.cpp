@@ -1,5 +1,4 @@
 #include "pch/pch.hpp"
-#include <glad/glad.h>
 #include <stdexcept>
 #include "plateform/windowsWindow.hpp"
 #include "log/log.hpp"
@@ -70,6 +69,13 @@ namespace scivibe{
             data.EventCallback(event);
         });
 
+        glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int c){
+            WindowData& data = *(WindowData*) glfwGetWindowUserPointer(window);
+            KeyTypedEvent event(c);
+            data.EventCallback(event);
+        });
+
+
         glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods){
             WindowData& data = *(WindowData*) glfwGetWindowUserPointer(window);
             switch(action){
@@ -99,6 +105,7 @@ namespace scivibe{
             {
             case GLFW_PRESS:{
                 MouseButtonPressedEvent event(button);
+                data.EventCallback(event);
                 break;}
             
             case GLFW_RELEASE:{

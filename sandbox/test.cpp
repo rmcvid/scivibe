@@ -21,6 +21,7 @@ class Sandbox : public scivibe::Application{
     public:
         Sandbox(){
             PushLayer(new ExampleLayer());
+            PushLayer(new scivibe::ImGuiLayer());
         }
         ~Sandbox(){}
 };

@@ -2,6 +2,8 @@
 
 #include "window/window.hpp"
 #include <GLFW/glfw3.h>
+#include <glad/glad.h>
+
 namespace scivibe {
     class WindowsWindow : public Window
     {
