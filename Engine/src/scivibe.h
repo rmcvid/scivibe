@@ -3,8 +3,8 @@
 #include "core/core.hpp"
 
 // GLAD must precede GLFW and any other OpenGL headers.
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+//#include <glad/glad.h>
+//#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <miniaudio.h>
 
@@ -25,3 +25,7 @@
 #include "core/entryPoint.hpp"
 
 #include "gui/imGuiLayer.hpp"
+
+#include "constants/keyCode.hpp"
+#include "constants/mouseCode.hpp"
+

@@ -20,17 +20,10 @@ namespace scivibe{
             
             void OnAttach() override ;
             void OnDetach() override;
-            void OnUpdate() override;
-            void OnEvent(Event& event);
+            void OnImGuiRender() override ;
+            void Begin();
+            void End();
         private:
             float m_time = 0.0f;
-            bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& event);
-            bool OnMouseButtonReleasedEvent(MouseButtonReleasedEvent& event); 
-            bool OnMouseMovedEvent(MouseMovedEvent& event); 
-            bool OnMouseScrolledEvent(MouseScrolledEvent& event);   
-            bool OnKeyPressedEvent(KeyPressedEvent& event);
-            bool OnKeyReleasedEvent(KeyReleasedEvent& event); 
-            bool OnKeyTypedEvent(KeyTypedEvent& event);
-            bool OnWindowResizeEvent(WindowResizeEvent &event); 
     };
 }

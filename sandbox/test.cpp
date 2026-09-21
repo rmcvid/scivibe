@@ -10,7 +10,7 @@ class ExampleLayer : public scivibe::Layer
         }
     
         void OnUpdate() override{
-            SCIVIBE_INFO("ExampleLayer::Update");
+           
         }
 
         void OnEvent(scivibe::Event& event) override{
@@ -21,7 +21,6 @@ class Sandbox : public scivibe::Application{
     public:
         Sandbox(){
             PushLayer(new ExampleLayer());
-            PushLayer(new scivibe::ImGuiLayer());
         }
         ~Sandbox(){}
 };

@@ -4,7 +4,7 @@
 #include "window/window.hpp"
 #include "Events/applicationEvent.hpp"
 #include "layer/layerStack.hpp"
-
+#include "gui/imGuiLayer.hpp"
 namespace scivibe {
     class SCIVIBE_API Application {
     public:
@@ -21,8 +21,10 @@ namespace scivibe {
     private :
         bool OnWindowClose(WindowCloseEvent& e);
         std::unique_ptr<Window> m_window;
+        ImGuiLayer* m_ImGuiLayer;
         bool m_Running = true;
         LayerStack m_LayerStack;
+
         static Application* s_Instance;
     };
     // Optional factory implemented by the client, not exported by the engine.

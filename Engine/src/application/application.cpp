@@ -5,20 +5,24 @@
 #include "pch/pch.hpp"
 #include "GLFW/glfw3.h"
 #include "glad/glad.h"
+#include "window/windowInput.hpp"
+#include "gui/imGuiLayer.hpp"
 
 namespace scivibe {
 #define BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
 
     Application* Application::s_Instance = nullptr;
+
     Application::Application() {
         SCIVIBE_CORE_ASSERT(!s_Instance, "Application already exist")
         s_Instance = this;
         m_window = std::unique_ptr<Window>(Window::Create());
         m_window->SetEventCallback(BIND_EVENT_FN(onEvent));
-        SCIVIBE_CORE_INFO("Application created");
-    }
 
-    Application::~Application() {
+        m_ImGuiLayer = new ImGuiLayer();
+        PushOverLayer(m_ImGuiLayer); 
+    }
+    Application::~Application() { 
         SCIVIBE_CORE_INFO("Application destroyed");
     }
 
@@ -30,6 +34,7 @@ namespace scivibe {
 
     void Application::PushOverLayer(Layer* layer){
         m_LayerStack.PushOverLayer(layer);
+        layer->OnAttach();
     }
 
     void Application::onEvent(Event& e){
@@ -51,9 +56,16 @@ namespace scivibe {
         while (m_Running) {
             glClearColor(1,0,1,1);
             glClear(GL_COLOR_BUFFER_BIT);
+
             for (Layer* layer : m_LayerStack){
                 layer->OnUpdate();
             }
+
+            m_ImGuiLayer->Begin();
+            for (Layer* layer : m_LayerStack){
+                layer->OnImGuiRender();
+            }
+            m_ImGuiLayer->End();
             m_window->onUpdate();
         }
     }
