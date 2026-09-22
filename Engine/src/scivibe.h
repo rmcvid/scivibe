@@ -11,7 +11,7 @@
 #include "objet/color.hpp"
 #include "objet/fleche.hpp"
 #include "log/log.hpp"
-#include "shader/shader.h"
+#include "shader/shader.hpp"
 
 #include "Events/event.hpp"
 #include "Events/applicationEvent.hpp"

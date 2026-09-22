@@ -2,7 +2,10 @@
 
 ## To do
 - Lié la fenetre d'openGl à ffmpeg afin de pouvoir enregistrée tout ce qui s'affiche à l'écran
-- Developper un log system
+- Voir si les fonction de imgui qui ne sont pas utilisé sont quand même exportée au client pour que lui puisse les utiliser ( sinon faire un fichier .def ?)
+- Ajouter l'ecriture en latex dans la fenetre
+- Une idee qui peut être bien est de relier une camera à l'ordinateur. En plus d'enregistrer l'affichage, la camera s'occupe de filmer et on peut lier les deux au montage en notifiant les moments de passage
+- 
 
 
 ## fichier utilisé

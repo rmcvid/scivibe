@@ -86,6 +86,8 @@ target_compile_definitions(scivibe
     PRIVATE SCIVIBE_BUILD_DLL
     PUBLIC GLFW_INCLUDE_NONE
     $<$<CONFIG:Debug>:SCIVIBE_ENABLE_ASSERT>
+    # The trailing slash allows SHADER_PATH "shader.vs" in C++.
+    "SHADER_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/src/shader/\""
 )
 target_include_directories(scivibe PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(scivibe 

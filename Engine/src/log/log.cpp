@@ -12,14 +12,14 @@ namespace scivibe {
     }
 
     void Log::info(const char* message) {
-        s_CoreLogger->info("{}", message);
+        Write(s_CoreLogger, spdlog::level::info, message);
     }
 
     void Log::warning(const char* message) {
-        s_CoreLogger->warn("{}", message);
+        Write(s_CoreLogger, spdlog::level::warn, message);
     }
 
     void Log::error(const char* message) {
-        s_CoreLogger->error("{}", message);
+        Write(s_CoreLogger, spdlog::level::err, message);
     }
 }

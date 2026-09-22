@@ -1,8 +1,17 @@
 #pragma once
 
 #include "window/window.hpp"
+#include "pch/pch.hpp"
+#include <stdexcept>
+#include "log/log.hpp"
+
+#include "Events/event.hpp"
+#include "Events/applicationEvent.hpp"
+#include "Events/keyEvent.hpp"
+#include "Events/mouseEvent.hpp"
+
+#include "plateform/OpenGl/OpenGLContext.hpp"
 #include <GLFW/glfw3.h>
-#include <glad/glad.h>
 
 namespace scivibe {
     class WindowsWindow : public Window
@@ -25,7 +34,9 @@ namespace scivibe {
     private :
         virtual void Init(const WindowProps& props);
         virtual void Shutdown();
+
         GLFWwindow* m_Window;
+        GraphicsContext* m_Context;
         struct WindowData{
             std::string Title;
             unsigned int Width, Height;

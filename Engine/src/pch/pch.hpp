@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <functional>
 
+#include "core/core.hpp"
+
 #include <string>
 #include <sstream>
 #include <vector>

@@ -1,12 +1,4 @@
-#include "pch/pch.hpp"
-#include <stdexcept>
 #include "plateform/windowsWindow.hpp"
-#include "log/log.hpp"
-
-#include "Events/event.hpp"
-#include "Events/applicationEvent.hpp"
-#include "Events/keyEvent.hpp"
-#include "Events/mouseEvent.hpp"
 
 namespace scivibe{
     
@@ -33,7 +25,7 @@ namespace scivibe{
         m_Data.Height = props.Heigth;
         
         SCIVIBE_CORE_INFO("Fenetre créée {0} ({1},{2})", props.Title, props.Width, props.Heigth );
-
+        
         if(!s_GLFWInitialized){
             int success = glfwInit();
             SCIVIBE_CORE_ASSERT(success, "could not initialize GLFW");
@@ -42,14 +34,8 @@ namespace scivibe{
         }
         
         m_Window = glfwCreateWindow((int)props.Width,(int)props.Heigth, m_Data.Title.c_str(),nullptr,nullptr);
-        glfwMakeContextCurrent(m_Window);
-
-        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-            SCIVIBE_CORE_ERROR("Impossible d'initialiser GLAD");
-            glfwDestroyWindow(m_Window);
-            m_Window = nullptr;
-            throw std::runtime_error("gladLoadGLLoader failed");
-        }
+        m_Context = new OpenGLContext(m_Window);
+        m_Context->Init(); 
         
         glfwSetWindowUserPointer(m_Window, &m_Data);
         SetVSync(true);
@@ -138,7 +124,7 @@ namespace scivibe{
 
     void WindowsWindow::onUpdate(){
         glfwPollEvents();
-        glfwSwapBuffers(m_Window);
+        m_Context->SwapBuffers();
     }
     void WindowsWindow::SetVSync(bool enabled){
         if(enabled){ glfwSwapInterval(1);}
