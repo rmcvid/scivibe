@@ -1,14 +1,24 @@
 #pragma once
+#include "core/core.hpp"
+#include "renderer/renderCommand.hpp"
+#include "renderer/camera.hpp"
+#include "shader/shader.hpp"
 
 namespace scivibe {
-    enum class RendererAPI{
-        None = 0, OpenGL = 1
-    };
-    class Renderer{
+    class SCIVIBE_API Renderer{
         public:
-            inline static RendererAPI GetAPI(){ return s_RendererAPI;}
-        private :
-            static RendererAPI s_RendererAPI;
+            static void BeginScene(OrthographicCamera& camera);
+            static void EndScene();
+            static void Submit(const std::shared_ptr<Shader>& shader,const std::shared_ptr<VertexArray>& vertexArray);
+
+
+            inline static RendererAPI::API GetAPI(){ return RendererAPI::GetAPI();}
+
+        private:
+            struct SceneData{
+                glm::mat4 ViewProjectionMatrix;
+            };
+            static SceneData* m_SceneData;
     };
     
 }

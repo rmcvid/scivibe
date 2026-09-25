@@ -8,7 +8,7 @@ in vec4 vColor;
 
 void main()
 {
-    //FragColor = vec4(0.2,0.2,0.2, 1.0f);
-    FragColor = vColor;
+    FragColor = vec4(1.0f,1.0f,0.9f, 1.0f);
+    //FragColor = vColor;
 
 }

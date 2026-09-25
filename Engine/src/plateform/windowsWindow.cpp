@@ -129,6 +129,7 @@ namespace scivibe{
     void WindowsWindow::SetVSync(bool enabled){
         if(enabled){ glfwSwapInterval(1);}
         else { glfwSwapInterval(0);}
+        m_Data.VSync = enabled;
     }
     bool WindowsWindow::IsVSync() const {
         return m_Data.VSync;

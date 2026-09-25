@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/core.hpp"
+#include "core/timeStep.hpp"
 
 // GLAD must precede GLFW and any other OpenGL headers.
 //#include <glad/glad.h>
@@ -28,4 +29,15 @@
 
 #include "constants/keyCode.hpp"
 #include "constants/mouseCode.hpp"
+
+#include "renderer/renderer.hpp"
+#include "renderer/renderCommand.hpp"
+#include "renderer/buffer.hpp"
+#include "renderer/vertexArray.hpp"
+#include "renderer/camera.hpp"
+#include "input/input.hpp"
+
+#include "shader/shader.hpp"
+
+
 

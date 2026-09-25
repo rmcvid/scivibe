@@ -1,5 +1,6 @@
 #pragma once
 #include "core/core.hpp"
+#include "core/timeStep.hpp"
 #include "Events/event.hpp"
 #include "window/window.hpp"
 #include "Events/applicationEvent.hpp"
@@ -8,6 +9,8 @@
 #include "shader/shader.hpp"
 #include "renderer/buffer.hpp"
 #include "renderer/vertexArray.hpp"
+#include "renderer/camera.hpp"
+
 
 namespace scivibe {
     class SCIVIBE_API Application {
@@ -28,10 +31,8 @@ namespace scivibe {
         ImGuiLayer* m_ImGuiLayer;
         bool m_Running = true;
         LayerStack m_LayerStack;
-
-        std::shared_ptr<Shader> m_Shader; 
-        std::shared_ptr<VertexArray> m_VertexArray;
-
+        Timestep m_Timestep;
+        double m_LastFrameTime {0.0};
         static Application* s_Instance;
     };
     // Optional factory implemented by the client, not exported by the engine.

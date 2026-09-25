@@ -5,6 +5,7 @@
   "cmake.automaticReconfigure": true,
   "cmake.useVsDeveloperEnvironment": "never",
   "cmake.buildBeforeRun": true,
+  "cmake.parallelJobs": 8,
   "cmake.setBuildTargetSameAsLaunchTarget": true,
   "cmake.launchBehavior": "reuseTerminal",
   "cmake.pinnedCommands": [

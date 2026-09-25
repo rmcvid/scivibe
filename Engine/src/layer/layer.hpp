@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/core.hpp"
+#include "core/timeStep.hpp"
 #include "Events/event.hpp"
 
 namespace scivibe{
@@ -12,7 +13,7 @@ namespace scivibe{
 
             virtual void OnAttach(){}
             virtual void OnDetach(){}
-            virtual void OnUpdate(){}
+            virtual void OnUpdate(Timestep ts){}
             virtual void OnImGuiRender(){}
             virtual void OnEvent(Event& event){}
 

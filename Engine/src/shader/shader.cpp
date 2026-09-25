@@ -1,4 +1,5 @@
 #include "shader/shader.hpp"
+#include "glm/gtc/type_ptr.hpp"
 namespace scivibe{
     Shader::Shader(const char* vertexPath, const char* fragmentPath){
         std::string vertexCode;
@@ -69,4 +70,11 @@ namespace scivibe{
         glUseProgram(0);
 
     }
+
+    void Shader::setUniformMat4(const std::string& name, const glm::mat4& mat ){
+        
+        GLint location = glGetUniformLocation(m_ID,name.c_str());
+        glUniformMatrix4fv(location,1,GL_FALSE,glm::value_ptr(mat));
+    }
+
 }

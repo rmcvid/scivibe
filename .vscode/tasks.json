@@ -21,8 +21,7 @@
             "args": [
                 "--build",
                 "--preset",
-                "mingw-debug",
-                "--parallel"
+                "mingw-debug"
             ],
             "dependsOn": "CMake Configure",
             "options": {
