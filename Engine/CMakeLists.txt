@@ -66,7 +66,8 @@ target_precompile_headers(scivibe PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src/pch/pch.hpp"
 )
 
-add_library(scivibe_imgui STATIC
+# Embed ImGui once in the engine DLL; applications use its exported API.
+add_library(scivibe_imgui OBJECT
     external/imgui/imgui.cpp
     external/imgui/imgui_draw.cpp
     external/imgui/imgui_tables.cpp
@@ -80,6 +81,17 @@ target_include_directories(scivibe_imgui PUBLIC
 
 target_compile_features(scivibe_imgui PUBLIC cxx_std_17)
 
+if(WIN32)
+    target_compile_definitions(scivibe_imgui PRIVATE "IMGUI_API=__declspec(dllexport)")
+    target_compile_definitions(scivibe
+        PRIVATE "IMGUI_API=__declspec(dllexport)"
+        INTERFACE "IMGUI_API=__declspec(dllimport)"
+    )
+else()
+    target_compile_definitions(scivibe_imgui PRIVATE "IMGUI_API=__attribute__((visibility(\"default\")))")
+    target_compile_definitions(scivibe PUBLIC "IMGUI_API=__attribute__((visibility(\"default\")))")
+endif()
+
 add_library(scivibe::engine ALIAS scivibe)
 target_compile_features(scivibe PUBLIC cxx_std_17)
 target_compile_definitions(scivibe
@@ -91,9 +103,9 @@ target_compile_definitions(scivibe
 )
 target_include_directories(scivibe PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(scivibe 
-    PRIVATE
-        scivibe_imgui
     PUBLIC
+        # Propagate headers, but keep the OBJECT files in the engine only.
+        scivibe_imgui
         scivibe_glad
         glfw glm::glm
         scivibe_miniaudio

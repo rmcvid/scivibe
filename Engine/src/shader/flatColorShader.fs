@@ -2,11 +2,8 @@
 layout (location = 0) out vec4 color;
 
 in vec3 vPos;
-in vec4 vColor;
-
+uniform vec4 uColor;
 void main()
 {
-    color = vec4(vPos *0.5+0.5,1.0);
-    color = vColor;
-
+    color = uColor;
 }
