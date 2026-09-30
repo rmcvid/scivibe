@@ -23,7 +23,8 @@ namespace scivibe{
 
         //virtual void UploadVSRendererUniformBuffer();
 
-        static Shader* Create(const std::string& vertexSrc, const std::string& fragmentSrc);
+        static Shader* Create(const std::string& filePath);
+        static Shader* Create(const std::string& vertexSrc, const std::string& fragmentSrc, const std::string& geometrySrc = "");
 
     
     };
