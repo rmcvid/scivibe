@@ -17,7 +17,7 @@ class ExampleLayer : public scivibe::Layer
                 0.5f,-0.5f, 0.0f, 0.2f,0.3f,0.8f,1.0f,
                 -0.0f, 0.5f, 0.0f, 0.1f,0.9f,0.2f,1.0f
             };
-            std::shared_ptr<scivibe::VertexBuffer> vertexBuffer;
+            scivibe::Ref<scivibe::VertexBuffer> vertexBuffer;
             vertexBuffer.reset(scivibe::VertexBuffer::Create(vertices, sizeof(vertices)));
             scivibe::BufferLayout layout {
                 {scivibe::ShaderDataType::Float3, "aPosition"},
@@ -27,7 +27,7 @@ class ExampleLayer : public scivibe::Layer
             m_VertexArray->AddVertexBuffer(vertexBuffer);
 
             uint32_t indices[3] = {0,1,2};
-            std::shared_ptr<scivibe::IndexBuffer> indexBuffer;
+            scivibe::Ref<scivibe::IndexBuffer> indexBuffer;
             indexBuffer.reset(scivibe::IndexBuffer::Create(indices, sizeof(indices)/ sizeof(uint32_t)));
             m_VertexArray->SetIndexBuffer(indexBuffer);
             m_Shader.reset(scivibe::Shader::Create(
@@ -37,30 +37,41 @@ class ExampleLayer : public scivibe::Layer
 
 
             m_VertexArrayBlue.reset(scivibe::VertexArray::Create());
-            float squareVertices[4*3] {
-                -0.75f,-0.75f, 0.0f,
-                 0.75f,-0.75f, 0.0f, 
-                 0.75f, 0.75f, 0.0f,
-                -0.75f, 0.75f, 0.0f
+            float squareVertices[4*5] {
+                -0.5f,-0.5f, 0.0f, 0.0f,0.0f,
+                 0.5f,-0.5f, 0.0f, 1.0f,0.0f,
+                 0.5f, 0.5f, 0.0f, 1.0f,1.0f,
+                -0.5f, 0.5f, 0.0f, 0.0f,1.0f
             };
-            std::shared_ptr<scivibe::VertexBuffer> squareVertexBuffer;
+            scivibe::Ref<scivibe::VertexBuffer> squareVertexBuffer;
             squareVertexBuffer.reset(scivibe::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
             scivibe::BufferLayout squareLayout {
-                {scivibe::ShaderDataType::Float3, "aPosition"}
+                {scivibe::ShaderDataType::Float3, "aPosition"},
+                {scivibe::ShaderDataType::Float2, "aTexCoord"}
             };
 
             squareVertexBuffer->SetLayout(squareLayout);
             m_VertexArrayBlue->AddVertexBuffer(squareVertexBuffer);
 
             uint32_t squareIndices[6] = {0,1,2,2,3,0};
-            std::shared_ptr<scivibe::IndexBuffer> squareBuffer;
+            
+            scivibe::Ref<scivibe::IndexBuffer> squareBuffer;
             squareBuffer.reset(scivibe::IndexBuffer::Create(squareIndices, sizeof(squareIndices)/ sizeof(uint32_t)));
             m_VertexArrayBlue->SetIndexBuffer(squareBuffer);
             m_FlatColorShader.reset(scivibe::Shader::Create(
                 SHADER_PATH "flatColorShader.vs",
                 SHADER_PATH "flatColorShader.fs"
             ));
-
+            
+            //scivibe::Ref<scivibe::IndexBuffer> squareBuffer;
+            //m_VertexArrayTexture->SetIndexBuffer(squareBuffer);
+            m_TextureShader.reset(scivibe::Shader::Create(
+                SHADER_PATH "textureShader.vs",
+                SHADER_PATH "textureShader.fs"
+            ));
+            m_Texture = scivibe::Texture2D::Create("C:/Users/ryanm/Documents/Rmvi/scivibeVScode/sandbox/image/chess.png");
+            std::dynamic_pointer_cast<scivibe::OpenGLShader>(m_TextureShader)->Bind();
+            std::dynamic_pointer_cast<scivibe::OpenGLShader>(m_TextureShader)->UploadUniformInt("uTexture",0);
         }
 
         
@@ -109,9 +120,9 @@ class ExampleLayer : public scivibe::Layer
             glm::mat4 transform = glm::translate(glm::mat4(1.0f),m_squarePosition);
             std::dynamic_pointer_cast<scivibe::OpenGLShader>(m_FlatColorShader)->Bind();
             std::dynamic_pointer_cast<scivibe::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat4("uColor",m_Color);
-            scivibe::Renderer::Submit(m_FlatColorShader ,m_VertexArrayBlue, transform);
-            scivibe::Renderer::Submit(m_Shader ,m_VertexArray);
-
+            //civibe::Renderer::Submit(m_FlatColorShader ,m_VertexArrayBlue, transform);
+            m_Texture->Bind(0);
+            scivibe::Renderer::Submit(m_TextureShader ,m_VertexArrayBlue,  glm::scale(glm::mat4(1.0f),glm::vec3(1.5f)));
             scivibe::Renderer::EndScene();
         }
 
@@ -132,11 +143,17 @@ class ExampleLayer : public scivibe::Layer
             return false;
         }
     private:
-        std::shared_ptr<scivibe::Shader> m_Shader; 
-        std::shared_ptr<scivibe::VertexArray> m_VertexArray;
+        scivibe::Ref<scivibe::Shader> m_Shader; 
+        scivibe::Ref<scivibe::VertexArray> m_VertexArray;
         
-        std::shared_ptr<scivibe::Shader> m_FlatColorShader; 
-        std::shared_ptr<scivibe::VertexArray> m_VertexArrayBlue;
+        scivibe::Ref<scivibe::Shader> m_FlatColorShader; 
+        scivibe::Ref<scivibe::VertexArray> m_VertexArrayBlue;
+
+        scivibe::Ref<scivibe::Texture2D> m_Texture; 
+        scivibe::Ref<scivibe::Shader> m_TextureShader; 
+
+
+
 
         scivibe::OrthographicCamera m_Camera;
 

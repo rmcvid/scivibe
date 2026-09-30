@@ -58,6 +58,10 @@ namespace scivibe{
     void OpenGLShader::setInt(const std::string &name, int value) const{ 
             glUniform1i(glGetUniformLocation(m_ID, name.c_str()), value); 
     }
+    void OpenGLShader::UploadUniformInt( const std::string& name, int value) const
+    {
+        glUniform1i(glGetUniformLocation(m_ID, name.c_str()), value);
+    }
     void OpenGLShader::UploadUniformFloat(const std::string &name, const float value) const{ 
         glUniform1f(glGetUniformLocation(m_ID, name.c_str()), value); 
     }

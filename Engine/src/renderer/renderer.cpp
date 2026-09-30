@@ -11,7 +11,7 @@ namespace scivibe{
 
     void Renderer::EndScene(){
     }    
-    void Renderer::Submit(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray> &vertexArray, const glm::mat4 transform ){
+    void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray> &vertexArray, const glm::mat4 transform ){
         shader->Bind();
         std::dynamic_pointer_cast<OpenGLShader>(shader)->setUniformMat4("uViewProjection",m_SceneData->ViewProjectionMatrix);
         std::dynamic_pointer_cast<OpenGLShader>(shader)->setUniformMat4("uTransform",transform);

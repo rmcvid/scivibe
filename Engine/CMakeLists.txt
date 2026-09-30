@@ -11,6 +11,10 @@ foreach(dependency IN ITEMS glfw glm miniaudio spdlog)
     endif()
 endforeach()
 
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/stb/stb_image.h")
+    message(FATAL_ERROR "Missing stb: run git submodule update --init --recursive")
+endif()
+
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build GLFW examples")
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build GLFW tests")
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build GLFW documentation")
@@ -30,6 +34,11 @@ find_package(Threads REQUIRED)
 add_library(scivibe_glad STATIC external/glad/src/glad.c)
 target_include_directories(scivibe_glad PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/external/glad/include")
 target_link_libraries(scivibe_glad PUBLIC ${CMAKE_DL_LIBS})
+
+# Compile stb_image's implementation once, outside the upstream submodule.
+add_library(scivibe_stb_image STATIC external/stb_image.cpp)
+target_include_directories(scivibe_stb_image PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/external/stb")
+target_compile_features(scivibe_stb_image PRIVATE cxx_std_17)
 
 
 # Compile miniaudio's implementation once, rather than in every application.
@@ -100,9 +109,12 @@ target_compile_definitions(scivibe
     $<$<CONFIG:Debug>:SCIVIBE_ENABLE_ASSERT>
     # The trailing slash allows SHADER_PATH "shader.vs" in C++.
     "SHADER_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/src/shader/\""
+    "IMAGE_ENGINE_PATH= \"${CMAKE_CURRENT_SOURCE_DIR}/image/\""
 )
 target_include_directories(scivibe PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(scivibe 
+    PRIVATE
+        scivibe_stb_image
     PUBLIC
         # Propagate headers, but keep the OBJECT files in the engine only.
         scivibe_imgui

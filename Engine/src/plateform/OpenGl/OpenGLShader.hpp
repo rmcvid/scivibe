@@ -20,7 +20,7 @@ namespace scivibe{
         void use() override;
         void setBool(const std::string &name, bool value) const;
         void setInt(const std::string &name, int value) const;
-        void UploadUniformInt(const std::string &name, const glm::vec4& value) const;
+        void UploadUniformInt(const std::string &name, const int value) const;
 
         void UploadUniformFloat(const std::string &name, const float value) const;
         void UploadUniformFloat2(const std::string &name, const glm::vec2& value) const;

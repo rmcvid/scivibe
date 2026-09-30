@@ -1,5 +1,6 @@
 #pragma once
-
+#include <stdio.h>
+#include <memory>
 // SCIVIBE_BUILD_DLL is defined only while compiling the engine itself.
 #if defined(_WIN32)
     #if defined(SCIVIBE_BUILD_DLL)
@@ -24,4 +25,11 @@
 
 #define SCIVIBE_BIND_EVENT_FN(fn) std::bind(&fn,this,std::placeholders::_1)
 
+namespace scivibe{
+    template<typename T>
+    using Scope = std::unique_ptr<T>;
 
+    template<typename T>
+    using Ref = std::shared_ptr<T>;
+    
+}

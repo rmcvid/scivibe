@@ -27,7 +27,7 @@ namespace scivibe {
         inline Window& GetWindow(){return *m_window;};
     private :
         bool OnWindowClose(WindowCloseEvent& e);
-        std::unique_ptr<Window> m_window;
+        Scope<Window> m_window;
         ImGuiLayer* m_ImGuiLayer;
         bool m_Running = true;
         LayerStack m_LayerStack;

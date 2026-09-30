@@ -39,7 +39,7 @@ namespace scivibe {
         SCIVIBE_CORE_ASSERT(!s_Instance, "Application already exist")
 
         s_Instance = this;
-        m_window = std::unique_ptr<Window>(Window::Create());
+        m_window = Scope<Window>(Window::Create());
         m_window->SetEventCallback(BIND_EVENT_FN(onEvent));
         //m_window->SetVSync(true);
 

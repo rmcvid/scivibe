@@ -35,6 +35,8 @@
 #include "renderer/buffer.hpp"
 #include "renderer/vertexArray.hpp"
 #include "renderer/camera.hpp"
+#include "renderer/texture.hpp"
+
 #include "input/input.hpp"
 
 #include "shader/shader.hpp"
