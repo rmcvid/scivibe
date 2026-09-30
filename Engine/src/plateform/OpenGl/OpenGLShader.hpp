@@ -15,7 +15,7 @@ namespace scivibe{
     public:
         // constructor generates the shader on the fly
         // ------------------------------------------------------------------------
-        OpenGLShader(const std::string& vertexSrc, const std::string& fragmentSrc);
+        OpenGLShader(const std::string& vertexSrc, const std::string& fragmentSrc, const std::string& geometrySrc = "");
         ~OpenGLShader();
         void use() override;
         void setBool(const std::string &name, bool value) const;

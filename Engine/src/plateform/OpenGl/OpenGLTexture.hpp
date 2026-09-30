@@ -2,6 +2,9 @@
 #include <string>
 #include "pch/pch.hpp"
 #include "renderer/texture.hpp"
+#include <glad/glad.h>
+
+
 namespace scivibe{
     class OpenGLTexture2D : public Texture2D{
         public:
@@ -16,6 +19,7 @@ namespace scivibe{
             uint32_t m_Width;
             uint32_t m_Height;
             uint32_t m_RendererID;
+            void GetFormat(int channels, GLenum& internalForma, GLenum& dataformat );
     };
 
 }

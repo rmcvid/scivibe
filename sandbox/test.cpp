@@ -69,7 +69,8 @@ class ExampleLayer : public scivibe::Layer
                 SHADER_PATH "textureShader.vs",
                 SHADER_PATH "textureShader.fs"
             ));
-            m_Texture = scivibe::Texture2D::Create("C:/Users/ryanm/Documents/Rmvi/scivibeVScode/sandbox/image/chess.png");
+            m_Texture = scivibe::Texture2D::Create( IMAGE_SANDBOX_PATH "chess.png");
+            m_ScivibeLogo = scivibe::Texture2D::Create(IMAGE_SANDBOX_PATH "logo_transparent.png");
             std::dynamic_pointer_cast<scivibe::OpenGLShader>(m_TextureShader)->Bind();
             std::dynamic_pointer_cast<scivibe::OpenGLShader>(m_TextureShader)->UploadUniformInt("uTexture",0);
         }
@@ -108,21 +109,21 @@ class ExampleLayer : public scivibe::Layer
             m_Camera.setPosition(m_CameraPosition);
             m_Camera.setRotation(0);
 
-
             scivibe::RenderCommand::SetClearColor({0.0f,0.0f,0.0f,0.0f});
             scivibe::RenderCommand::Clear();
             scivibe::Renderer::BeginScene(m_Camera);
 
-            //scivibe::MaterialRef material = new scivibe::Material(m_FlatColorShader);
-            //scivibe::MaterialInstanceRef mi = new scivibe::MaterialInstance(material);
-            //mi->Set("uColor",uColor);
-            //material->Set("uColor",uColor);
             glm::mat4 transform = glm::translate(glm::mat4(1.0f),m_squarePosition);
             std::dynamic_pointer_cast<scivibe::OpenGLShader>(m_FlatColorShader)->Bind();
             std::dynamic_pointer_cast<scivibe::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat4("uColor",m_Color);
             //civibe::Renderer::Submit(m_FlatColorShader ,m_VertexArrayBlue, transform);
             m_Texture->Bind(0);
-            scivibe::Renderer::Submit(m_TextureShader ,m_VertexArrayBlue,  glm::scale(glm::mat4(1.0f),glm::vec3(1.5f)));
+            scivibe::Renderer::Submit(m_TextureShader, m_VertexArrayBlue,  glm::scale(glm::mat4(1.0f),glm::vec3(1.5f)));
+
+            m_ScivibeLogo->Bind(0);
+            scivibe::Renderer::Submit(m_TextureShader, m_VertexArrayBlue,  glm::scale(glm::mat4(1.0f),glm::vec3(1.5f)));
+
+
             scivibe::Renderer::EndScene();
         }
 
@@ -149,7 +150,9 @@ class ExampleLayer : public scivibe::Layer
         scivibe::Ref<scivibe::Shader> m_FlatColorShader; 
         scivibe::Ref<scivibe::VertexArray> m_VertexArrayBlue;
 
-        scivibe::Ref<scivibe::Texture2D> m_Texture; 
+        scivibe::Ref<scivibe::Texture2D> m_Texture;
+        scivibe::Ref<scivibe::Texture2D> m_ScivibeLogo;
+
         scivibe::Ref<scivibe::Shader> m_TextureShader; 
 
 

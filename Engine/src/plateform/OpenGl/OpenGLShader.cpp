@@ -1,13 +1,17 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "plateform/OpenGl/OpenGLShader.hpp"
 namespace scivibe{
-    OpenGLShader::OpenGLShader(const std::string& vertexSrc, const std::string& fragmentSrc){
+    OpenGLShader::OpenGLShader(const std::string& vertexSrc, const std::string& fragmentSrc, const std::string& geometrySrc){
         std::string vertexCode;
         std::string fragmentCode;
+        std::string geometryCode;
         std::ifstream vShaderFile;
         std::ifstream fShaderFile;
+        std::ifstream gShaderFile;
+
         vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
         fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+        gShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
         try 
         {
             vShaderFile.open(vertexSrc);
@@ -28,7 +32,7 @@ namespace scivibe{
         }
         const char* vShaderCode = vertexCode.c_str();
         const char * fShaderCode = fragmentCode.c_str();
-        unsigned int vertex, fragment;
+        unsigned int vertex, fragment, geometry;
         vertex = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertex, 1, &vShaderCode, NULL);
         glCompileShader(vertex);
@@ -40,10 +44,31 @@ namespace scivibe{
         m_ID = glCreateProgram();
         glAttachShader(m_ID, vertex);
         glAttachShader(m_ID, fragment);
+
+        if(!geometrySrc.empty()){
+            try {
+                gShaderFile.open(geometrySrc);
+                std::stringstream gShaderStream;
+                gShaderStream << gShaderFile.rdbuf();
+                gShaderFile.close();
+                geometryCode   = gShaderStream.str();
+            }
+            catch (std::ifstream::failure& e)
+            {
+                std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
+            }
+            const char * gShaderCode = geometryCode.c_str();
+            geometry = glCreateShader(GL_GEOMETRY_SHADER);
+            glShaderSource(geometry, 1, &gShaderCode, NULL);
+            glCompileShader(geometry);
+            checkCompileErrors(geometry, "Geometry");
+            glAttachShader(m_ID,geometry);
+        }
         glLinkProgram(m_ID);
         checkCompileErrors(m_ID, "PROGRAM");
         glDeleteShader(vertex);
         glDeleteShader(fragment);
+        glDeleteShader(geometry);
     }
     OpenGLShader::~OpenGLShader(){
         glDeleteProgram(m_ID);

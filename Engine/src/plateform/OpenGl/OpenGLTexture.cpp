@@ -1,5 +1,4 @@
 #include "plateform/OpenGl/OpenGLTexture.hpp"
-#include <glad/glad.h>
 #include "stb_image.h"
 #include "log/log.hpp"
 
@@ -14,13 +13,15 @@ namespace scivibe{
         m_Width = width;
         m_Height = height;
 
+        GLenum internalFormat {0}, dataFormat {0};
+        GetFormat(channels, internalFormat, dataFormat);
+        SCIVIBE_ASSERT(internalFormat, "number of channels not suported {0}", channels);
         glGenTextures(1, &m_RendererID);
         glBindTexture(GL_TEXTURE_2D, m_RendererID);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        // pourquoi comme ca ?
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGB8,m_Width,m_Height,0,GL_RGBA,GL_UNSIGNED_BYTE,nullptr);
-        glTexSubImage2D(GL_TEXTURE_2D,0,0, 0,m_Width, m_Height,GL_RGBA,GL_UNSIGNED_BYTE,data);
+        glTexImage2D(GL_TEXTURE_2D,0,internalFormat,m_Width,m_Height,0,dataFormat,GL_UNSIGNED_BYTE,data);
+        //glTexSubImage2D(GL_TEXTURE_2D,0,0, 0,m_Width, m_Height,dataFormat,GL_UNSIGNED_BYTE,data);
         stbi_image_free(data);
 
     }
@@ -29,7 +30,18 @@ namespace scivibe{
 
     }
     void OpenGLTexture2D::Bind(uint32_t slot) const {
-        glBindTexture(slot,m_RendererID);
+        glActiveTexture(GL_TEXTURE0 + slot);
+        glBindTexture(GL_TEXTURE_2D, m_RendererID);
+    }
+    void OpenGLTexture2D::GetFormat(int channels, GLenum& internalFormat, GLenum& dataFormat ){
+        if(channels == 4 ){
+            internalFormat = GL_RGBA8;
+            dataFormat = GL_RGBA;
+        }
+        else if(channels == 3 ){
+            internalFormat = GL_RGB8;
+            dataFormat = GL_RGB;    
+        }
     }
     
 }

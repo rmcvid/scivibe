@@ -7,6 +7,7 @@
 namespace scivibe {
     class SCIVIBE_API Renderer{
         public:
+            static void Init();
             static void BeginScene(OrthographicCamera& camera);
             static void EndScene();
             static void Submit(const Ref<Shader>& shader,

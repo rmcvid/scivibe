@@ -41,8 +41,8 @@ namespace scivibe {
         s_Instance = this;
         m_window = Scope<Window>(Window::Create());
         m_window->SetEventCallback(BIND_EVENT_FN(onEvent));
-        //m_window->SetVSync(true);
 
+        Renderer::Init();
         m_ImGuiLayer = new ImGuiLayer();
         PushOverLayer(m_ImGuiLayer); 
 

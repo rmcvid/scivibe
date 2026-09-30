@@ -109,7 +109,7 @@ target_compile_definitions(scivibe
     $<$<CONFIG:Debug>:SCIVIBE_ENABLE_ASSERT>
     # The trailing slash allows SHADER_PATH "shader.vs" in C++.
     "SHADER_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/src/shader/\""
-    "IMAGE_ENGINE_PATH= \"${CMAKE_CURRENT_SOURCE_DIR}/image/\""
+    "IMAGE_ENGINE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/image/\""
 )
 target_include_directories(scivibe PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(scivibe 
