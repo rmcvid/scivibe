@@ -13,3 +13,6 @@
 [submodule "Engine/external/imgui"]
 	path = Engine/external/imgui
 	url = https://github.com/TheCherno/imgui
+[submodule "Engine/external/stb"]
+	path = Engine/external/stb
+	url = https://github.com/nothings/stb.git
