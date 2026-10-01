@@ -4,14 +4,24 @@
 #include  <fstream>
 namespace scivibe{
 
-    OpenGLShader::OpenGLShader(const std::string& filePath){
+    OpenGLShader::OpenGLShader(const std::string& filePath)
+    {
         std::string source = ReadFile(filePath);
         auto shaderSource = PreProcess(source);
         Compile(shaderSource);
-
+        
+        // extract name from the filePath
+        auto lastSlash = filePath.find_last_of("/\\");
+        lastSlash = lastSlash == std::string::npos ? 0 : lastSlash + 1;
+        auto lastDot = filePath.rfind('.');
+        auto count = lastDot == std::string::npos ? filePath.size() - lastSlash : lastDot - lastSlash;
+        m_Name = filePath.substr(lastSlash,count);
     }
 
-    OpenGLShader::OpenGLShader(const std::string& vertexSrc, const std::string& fragmentSrc, const std::string& geometrySrc){
+    OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, 
+        const std::string& fragmentSrc, const std::string& geometrySrc)
+        : m_Name(name)
+        {
         std::unordered_map<GLenum, std::string> sources;
         std::string vertex = ReadFile(vertexSrc);
         std::string fragment = ReadFile(fragmentSrc);
@@ -53,7 +63,9 @@ namespace scivibe{
 
     void OpenGLShader::Compile(const std::unordered_map<GLenum,std::string>& shaderSources){
         GLuint program = glCreateProgram();
-        std::vector<GLenum> glShaderIds(shaderSources.size());
+        SCIVIBE_CORE_ASSERT(shaderSources.size() <= 3, "On supporte acutellement que 3 type de shaders");
+        std::array<GLenum,3> glShaderIds;
+        int glShaderIDindex = 0;
         for (auto& kv : shaderSources){
             GLenum type = kv.first;
             const std::string& source = kv.second;
@@ -72,7 +84,7 @@ namespace scivibe{
                 break;
             }
             glAttachShader(program,shader);
-            glShaderIds.push_back(shader);
+            glShaderIds[glShaderIDindex++] = shader;
         }
         glLinkProgram(program);
         

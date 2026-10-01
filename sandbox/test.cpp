@@ -30,10 +30,11 @@ class ExampleLayer : public scivibe::Layer
             scivibe::Ref<scivibe::IndexBuffer> indexBuffer;
             indexBuffer.reset(scivibe::IndexBuffer::Create(indices, sizeof(indices)/ sizeof(uint32_t)));
             m_VertexArray->SetIndexBuffer(indexBuffer);
-            m_Shader.reset(scivibe::Shader::Create(
+            m_Shader =scivibe::Shader::Create(
+                "shader",
                 SHADER_PATH "shader.vs",
                 SHADER_PATH "shader.fs"
-            ));
+            );
 
 
             m_VertexArrayBlue.reset(scivibe::VertexArray::Create());
@@ -58,21 +59,24 @@ class ExampleLayer : public scivibe::Layer
             scivibe::Ref<scivibe::IndexBuffer> squareBuffer;
             squareBuffer.reset(scivibe::IndexBuffer::Create(squareIndices, sizeof(squareIndices)/ sizeof(uint32_t)));
             m_VertexArrayBlue->SetIndexBuffer(squareBuffer);
-            m_FlatColorShader.reset(scivibe::Shader::Create(
+            m_FlatColorShader = scivibe::Shader::Create( 
+                "flat",
                 SHADER_PATH "flatColorShader.vs",
                 SHADER_PATH "flatColorShader.fs"
-            ));
+            );
             
             //scivibe::Ref<scivibe::IndexBuffer> squareBuffer;
             //m_VertexArrayTexture->SetIndexBuffer(squareBuffer);
-            m_TextureShader.reset(scivibe::Shader::Create(
+            auto textureShader = m_ShaderLib.Load(
+                "Texture",
                 SHADER_PATH "textureShader.vs",
                 SHADER_PATH "textureShader.fs"
-            ));
+            );
+        
             m_Texture = scivibe::Texture2D::Create( IMAGE_SANDBOX_PATH "chess.png");
             m_ScivibeLogo = scivibe::Texture2D::Create(IMAGE_SANDBOX_PATH "logo_transparent.png");
-            std::dynamic_pointer_cast<scivibe::OpenGLShader>(m_TextureShader)->Bind();
-            std::dynamic_pointer_cast<scivibe::OpenGLShader>(m_TextureShader)->UploadUniformInt("uTexture",0);
+            std::dynamic_pointer_cast<scivibe::OpenGLShader>(textureShader)->Bind();
+            std::dynamic_pointer_cast<scivibe::OpenGLShader>(textureShader)->UploadUniformInt("uTexture",0);
         }
 
         
@@ -117,11 +121,12 @@ class ExampleLayer : public scivibe::Layer
             std::dynamic_pointer_cast<scivibe::OpenGLShader>(m_FlatColorShader)->Bind();
             std::dynamic_pointer_cast<scivibe::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat4("uColor",m_Color);
             //civibe::Renderer::Submit(m_FlatColorShader ,m_VertexArrayBlue, transform);
+            auto textureShader = m_ShaderLib.Get("Texture");
             m_Texture->Bind(0);
-            scivibe::Renderer::Submit(m_TextureShader, m_VertexArrayBlue,  glm::scale(glm::mat4(1.0f),glm::vec3(1.5f)));
+            scivibe::Renderer::Submit(textureShader, m_VertexArrayBlue,  glm::scale(glm::mat4(1.0f),glm::vec3(1.5f)));
 
             m_ScivibeLogo->Bind(0);
-            scivibe::Renderer::Submit(m_TextureShader, m_VertexArrayBlue,  glm::scale(glm::mat4(1.0f),glm::vec3(1.5f)));
+            scivibe::Renderer::Submit(textureShader, m_VertexArrayBlue,  glm::scale(glm::mat4(1.0f),glm::vec3(1.5f)));
 
 
             scivibe::Renderer::EndScene();
@@ -152,8 +157,7 @@ class ExampleLayer : public scivibe::Layer
 
         scivibe::Ref<scivibe::Texture2D> m_Texture;
         scivibe::Ref<scivibe::Texture2D> m_ScivibeLogo;
-
-        scivibe::Ref<scivibe::Shader> m_TextureShader; 
+        scivibe::ShaderLibrary m_ShaderLib;
 
 
 

@@ -13,6 +13,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include<array>
 
 #include <type_traits>
 #include <spdlog/fmt/ostr.h>

@@ -22,11 +22,22 @@ namespace scivibe{
         virtual void UnBind() const = 0 ;
 
         //virtual void UploadVSRendererUniformBuffer();
+        virtual const std::string& GetName() const =0;
+        static Ref<Shader> Create(const std::string& filePath);
+        static Ref<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc, const std::string& geometrySrc = "");
+    };
 
-        static Shader* Create(const std::string& filePath);
-        static Shader* Create(const std::string& vertexSrc, const std::string& fragmentSrc, const std::string& geometrySrc = "");
-
-    
+    class SCIVIBE_API ShaderLibrary{
+        public :
+            void Add(const std::string& name,const Ref<Shader>& shader);
+            void Add(const Ref<Shader>& shader);
+            Ref<Shader> Load(const std::string& path);
+            Ref<Shader> Load(const std::string& name, const std::string& path);
+            Ref<Shader> Load(const std::string& name, const std::string& pathvs, const std::string& pathfs, const std::string& pathgeo = "");
+            Ref<Shader> Get(const std::string& name); 
+            bool Exists(const std::string& name ) const ; 
+        private:
+            std::unordered_map<std::string, Ref<Shader>> m_Shaders;
     };
 }
 #endif
