@@ -8,7 +8,7 @@ class ExampleLayer : public scivibe::Layer
 {
     public :
     ExampleLayer()
-        : Layer("Example"),  m_Camera(-1.6f,1.6f,-0.9f,0.9f), m_squarePosition(0.0f)
+        : Layer("Example"),  m_CameraController(1280.0f/720.0f, true), m_squarePosition(0.0f)
 
         {
             m_VertexArray.reset(scivibe::VertexArray::Create());
@@ -82,20 +82,9 @@ class ExampleLayer : public scivibe::Layer
         
     
         void OnUpdate(scivibe::Timestep ts) override{
+            m_CameraController.OnUpdate(ts);
             // à bouger dans une fonction move et remplacer par la direction de vue
             //SCIVIBE_CORE_INFO("delta time {0}s ( {1}ms)", ts.GetSeconds(),ts.GetMiliseconds());
-            if(scivibe::Input::IsKeyPressed(SCIVIBE_KEY_LEFT)){
-                m_CameraPosition.x -= ts * m_CameraSpeed;
-            }
-            if(scivibe::Input::IsKeyPressed(SCIVIBE_KEY_RIGHT)){
-                m_CameraPosition.x += ts* m_CameraSpeed;
-            }
-            if(scivibe::Input::IsKeyPressed(SCIVIBE_KEY_DOWN)){
-                m_CameraPosition.y -= ts*m_CameraSpeed;
-            }
-            if( scivibe::Input::IsKeyPressed(SCIVIBE_KEY_UP)){
-                m_CameraPosition.y += ts * m_CameraSpeed;
-            }
 
             if(scivibe::Input::IsKeyPressed(SCIVIBE_KEY_J)){
                 m_squarePosition.x -= ts * m_CameraSpeed;
@@ -110,12 +99,9 @@ class ExampleLayer : public scivibe::Layer
                 m_squarePosition.y += ts * m_CameraSpeed;
             }
             
-            m_Camera.setPosition(m_CameraPosition);
-            m_Camera.setRotation(0);
-
             scivibe::RenderCommand::SetClearColor({0.0f,0.0f,0.0f,0.0f});
             scivibe::RenderCommand::Clear();
-            scivibe::Renderer::BeginScene(m_Camera);
+            scivibe::Renderer::BeginScene(m_CameraController.GetCamera());
 
             glm::mat4 transform = glm::translate(glm::mat4(1.0f),m_squarePosition);
             std::dynamic_pointer_cast<scivibe::OpenGLShader>(m_FlatColorShader)->Bind();
@@ -133,6 +119,7 @@ class ExampleLayer : public scivibe::Layer
         }
 
         void OnEvent(scivibe::Event& event) override{
+            m_CameraController.OnEvent(event);
             //scivibe::EventDispatcher dispatcher(event);
             //dispatcher.Dispatch<scivibe::KeyPressedEvent>(SCIVIBE_BIND_EVENT_FN(onKeyPressedEvent));
             //SCIVIBE_TRACE("{0}",event);
@@ -159,11 +146,7 @@ class ExampleLayer : public scivibe::Layer
         scivibe::Ref<scivibe::Texture2D> m_ScivibeLogo;
         scivibe::ShaderLibrary m_ShaderLib;
 
-
-
-
-        scivibe::OrthographicCamera m_Camera;
-
+        scivibe::OrthographicCameraController m_CameraController;
         glm::vec3 m_CameraPosition;
         float m_CameraSpeed = 20.0f;
         float m_CameraRotation = 0.0f;

@@ -34,8 +34,9 @@
 #include "renderer/renderCommand.hpp"
 #include "renderer/buffer.hpp"
 #include "renderer/vertexArray.hpp"
-#include "renderer/camera.hpp"
 #include "renderer/texture.hpp"
+#include "renderer/camera.hpp"
+#include "renderer/orthographicCameraControler.hpp"
 
 #include "input/input.hpp"
 
