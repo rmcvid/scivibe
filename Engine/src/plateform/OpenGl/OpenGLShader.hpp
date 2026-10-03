@@ -7,7 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "log/log.hpp"
+#include "core/log.hpp"
 
 // from LearnOpenGL
 namespace scivibe{
@@ -38,7 +38,7 @@ namespace scivibe{
         virtual const std::string& GetName() const override {return m_Name;};
 
     private:
-        uint32_t m_ID;
+        uint32_t m_ID = 0;
         std::string m_Name;
         std::string ReadFile(const std::string& filePath);
         std::unordered_map<GLenum,std::string> PreProcess(const std::string& source);

@@ -1,6 +1,6 @@
 #include "plateform/OpenGl/OpenGLTexture.hpp"
 #include "stb_image.h"
-#include "log/log.hpp"
+#include "core/log.hpp"
 
 
 namespace scivibe{

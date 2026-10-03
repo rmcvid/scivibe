@@ -11,7 +11,7 @@
 
 #include "objet/color.hpp"
 #include "objet/fleche.hpp"
-#include "log/log.hpp"
+#include "core/log.hpp"
 #include "shader/shader.hpp"
 
 #include "Events/event.hpp"
@@ -21,9 +21,8 @@
 
 #include "layer/layer.hpp"
 
-#include "application/application.hpp"
+#include "core/application.hpp"
 
-#include "core/entryPoint.hpp"
 
 #include "gui/imGuiLayer.hpp"
 

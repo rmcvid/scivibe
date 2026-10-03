@@ -27,9 +27,12 @@ namespace scivibe {
         inline Window& GetWindow(){return *m_window;};
     private :
         bool OnWindowClose(WindowCloseEvent& e);
+        bool OnWindowResize(WindowResizeEvent& e);
+
         Scope<Window> m_window;
         ImGuiLayer* m_ImGuiLayer;
         bool m_Running = true;
+        bool m_Minimized = false;
         LayerStack m_LayerStack;
         Timestep m_Timestep;
         double m_LastFrameTime {0.0};

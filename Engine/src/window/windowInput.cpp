@@ -1,6 +1,6 @@
 #include "window/windowInput.hpp"
 #include "glfw/glfw3.h"
-#include "application/application.hpp"
+#include "core/application.hpp"
 namespace scivibe{
     Input* Input::s_Instance = new WindowsInput();
 

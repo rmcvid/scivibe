@@ -1,6 +1,6 @@
 #pragma once
 
-#include "log/log.hpp"
+#include "core/log.hpp"
 
 namespace scivibe {
     class GraphicsContext{

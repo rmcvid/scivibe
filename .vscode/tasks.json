@@ -23,7 +23,6 @@
                 "--preset",
                 "mingw-debug"
             ],
-            "dependsOn": "CMake Configure",
             "options": {
                 "cwd": "${workspaceFolder}"
             },

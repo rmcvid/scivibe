@@ -1,5 +1,5 @@
-#include "application/application.hpp"
-#include "log/log.hpp"
+#include "core/application.hpp"
+#include "core/log.hpp"
 #include "Events/event.hpp"
 #include "Events/applicationEvent.hpp"
 #include "pch/pch.hpp"
@@ -66,7 +66,8 @@ namespace scivibe {
     void Application::onEvent(Event& e){
         EventDispatcher dispatcher(e); 
         dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
-        SCIVIBE_CORE_TRACE("{0}",e);
+        dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FN(OnWindowResize));
+
         for( auto it = m_LayerStack.end(); it != m_LayerStack.begin(); ){
             (*--it)->OnEvent(e);
             if(e.GetHandled()){
@@ -87,8 +88,11 @@ namespace scivibe {
             double time = glfwGetTime();
             Timestep deltaTime = time - m_LastFrameTime;
             m_LastFrameTime = time;
-            for (Layer* layer : m_LayerStack){
-                layer->OnUpdate(deltaTime);
+            if(!m_Minimized){
+                for (Layer* layer : m_LayerStack){
+                   layer->OnUpdate(deltaTime);
+                }
+                
             }
 
             m_ImGuiLayer->Begin();
@@ -105,5 +109,14 @@ namespace scivibe {
         return true;
     }
 
+    bool Application::OnWindowResize(WindowResizeEvent &e){
+        if(e.GetWidth() == 0 || e.GetHeight() == 0){
+            m_Minimized = true;
+            return false;
+        }
+        m_Minimized = false;
+        Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
+        return false;
+    }
 
 }

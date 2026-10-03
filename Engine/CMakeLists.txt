@@ -73,6 +73,11 @@ set_target_properties(scivibe PROPERTIES
 
 target_precompile_headers(scivibe PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src/pch/pch.hpp"
+    <glm/glm.hpp>
+    <glm/gtc/matrix_transform.hpp>
+    <glm/gtc/type_ptr.hpp>
+    <spdlog/sinks/stdout_color_sinks.h>
+    <imgui.h>
 )
 
 # Embed ImGui once in the engine DLL; applications use its exported API.

@@ -14,6 +14,12 @@ namespace scivibe{
             bool OnWindowResized(WindowResizeEvent& e);
             OrthographicCamera& GetCamera(){return m_Camera;}
             const OrthographicCamera& GetCamera() const {return m_Camera;}
+            float GetCameraTranslationSpeed() const {return m_CameraTranslationSpeed;}
+            void SetCameraTranslationSpeed(float speed) {m_CameraTranslationSpeed = speed;}
+            float GetCameraRotationSpeed() const {return m_CameraRotationSpeed;}
+            void SetCameraRotationSpeed(float speed) {m_CameraRotationSpeed = speed;}
+            void SetZoomLevel(float level){ m_ZoomLevel = level;};
+            float GetZoomLevel(){return m_ZoomLevel;}
 
         private:
             float m_ZoomLevel {1.0f};

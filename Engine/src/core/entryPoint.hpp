@@ -1,7 +1,7 @@
 #pragma once
 #include "pch/pch.hpp"
-#include "application/application.hpp"
-#include "log/log.hpp"
+#include "core/application.hpp"
+#include "core/log.hpp"
 
 //#ifdef SCIVIBE_PLATFORM_WINDODWS
 //extern scivibe::Application* scivibe::CreateApplication(ApplicationCommandLineArgs args);

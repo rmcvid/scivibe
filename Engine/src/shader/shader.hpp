@@ -8,7 +8,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "log/log.hpp"
+#include "core/log.hpp"
 
 // from LearnOpenGL
 namespace scivibe{

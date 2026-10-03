@@ -2,7 +2,7 @@
 #include "core/core.hpp"
 #include "imGuiLayer.hpp"
 #include "imgui.h"
-#include "application/application.hpp"
+#include "core/application.hpp"
 
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_glfw.h"

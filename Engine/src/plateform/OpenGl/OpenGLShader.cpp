@@ -1,6 +1,7 @@
 #include "pch/pch.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "plateform/OpenGl/OpenGLShader.hpp"
+#include <array>
 #include  <fstream>
 namespace scivibe{
 
@@ -64,8 +65,8 @@ namespace scivibe{
     void OpenGLShader::Compile(const std::unordered_map<GLenum,std::string>& shaderSources){
         GLuint program = glCreateProgram();
         SCIVIBE_CORE_ASSERT(shaderSources.size() <= 3, "On supporte acutellement que 3 type de shaders");
-        std::array<GLenum,3> glShaderIds;
-        int glShaderIDindex = 0;
+        std::array<GLuint, 3> glShaderIds{};
+        size_t glShaderIDindex = 0;
         for (auto& kv : shaderSources){
             GLenum type = kv.first;
             const std::string& source = kv.second;
@@ -78,10 +79,15 @@ namespace scivibe{
             if(isCompiled==GL_FALSE){
                 GLint maxLength = 0;
                 glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
-                std::vector<GLchar> infoLog(maxLength);
+                std::vector<GLchar> infoLog(std::max(maxLength, 1));
                 glGetShaderInfoLog(shader,maxLength,&maxLength,&infoLog[0]);
                 SCIVIBE_CORE_ERROR("{0}",infoLog.data());
-                break;
+                glDeleteShader(shader);
+                for (size_t i = 0; i < glShaderIDindex; ++i) {
+                    glDeleteShader(glShaderIds[i]);
+                }
+                glDeleteProgram(program);
+                return;
             }
             glAttachShader(program,shader);
             glShaderIds[glShaderIDindex++] = shader;
@@ -92,19 +98,19 @@ namespace scivibe{
         glGetProgramiv(program,GL_LINK_STATUS,(int*)&isLinked);
         if(isLinked==GL_FALSE){
             GLint maxLength = 0;
-            glGetShaderiv(program, GL_INFO_LOG_LENGTH, &maxLength);
-            std::vector<GLchar> infoLog(maxLength);
-            glGetShaderInfoLog(program,maxLength,&maxLength,&infoLog[0]);
+            glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
+            std::vector<GLchar> infoLog(std::max(maxLength, 1));
+            glGetProgramInfoLog(program,maxLength,&maxLength,&infoLog[0]);
             glDeleteProgram(program);
-            for(auto id : glShaderIds){
-                glDeleteShader(id);
+            for(size_t i = 0; i < glShaderIDindex; ++i){
+                glDeleteShader(glShaderIds[i]);
             }
 
             SCIVIBE_CORE_ERROR("{0}",infoLog.data());
             return;
         }
-        for(auto id : glShaderIds){
-            glDeleteShader(id);
+        for(size_t i = 0; i < glShaderIDindex; ++i){
+            glDeleteShader(glShaderIds[i]);
         }
         m_ID = program;
     }
@@ -117,19 +123,29 @@ namespace scivibe{
         size_t pos = source.find(typeToken,0);
         while( pos != std::string::npos){
             size_t eol = source.find_first_of("\r\n",pos);
-            SCIVIBE_CORE_ASSERT(eol != std::string::npos, "Syntax error");
+            if (eol == std::string::npos) {
+                SCIVIBE_CORE_ERROR("Missing shader source after #type");
+                return {};
+            }
             size_t begin = pos + typeTokenLength +1;
             std::string type = source.substr(begin,eol-begin);
             type.erase(std::remove_if(type.begin(), type.end(),
                 [](unsigned char c) { return std::isspace(c); }), type.end()
             );
-            SCIVIBE_CORE_ASSERT(ShaderTypeFromString(type), "invalid shader type {0}", type);
+            const GLenum shaderType = ShaderTypeFromString(type);
+            if (!shaderType) {
+                return {};
+            }
             
-            size_t nextLinePos = source.find_first_not_of("\r\n",pos);
+            // Advance past the directive before looking for the next stage.
+            size_t nextLinePos = source.find_first_not_of("\r\n",eol);
+            if (nextLinePos == std::string::npos) {
+                SCIVIBE_CORE_ERROR("Missing source for {0} shader", type);
+                return {};
+            }
             pos = source.find(typeToken, nextLinePos);
-            shaderSources[ShaderTypeFromString(type)] = 
-                source.substr(nextLinePos,
-                    pos - (nextLinePos == std::string::npos ? source.size()-1 :  nextLinePos)); 
+            shaderSources[shaderType] = source.substr(nextLinePos,
+                pos == std::string::npos ? std::string::npos : pos - nextLinePos);
         }
         return shaderSources;
     }

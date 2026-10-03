@@ -1,6 +1,6 @@
 #pragma once
 #include "pch/pch.hpp"
-#include "log/log.hpp"
+#include "core/log.hpp"
 //#include 
 namespace scivibe{
     enum class ShaderDataType{

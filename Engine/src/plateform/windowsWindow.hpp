@@ -3,7 +3,7 @@
 #include "window/window.hpp"
 #include "pch/pch.hpp"
 #include <stdexcept>
-#include "log/log.hpp"
+#include "core/log.hpp"
 
 #include "Events/event.hpp"
 #include "Events/applicationEvent.hpp"

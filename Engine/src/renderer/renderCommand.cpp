@@ -4,4 +4,5 @@
 
 namespace scivibe{
     RendererAPI* RenderCommand::s_RendererAPI = new OpenGLRendererAPI;
+    
 }

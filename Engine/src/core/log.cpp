@@ -1,4 +1,4 @@
-#include "log/log.hpp"
+#include "core/log.hpp"
 
 namespace scivibe {
     std::shared_ptr<spdlog::logger> Log::s_CoreLogger;
