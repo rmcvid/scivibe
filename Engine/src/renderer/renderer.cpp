@@ -1,12 +1,14 @@
 #include "pch/pch.hpp"
 #include "renderer/renderer.hpp"
 #include "plateform/OpenGl/OpenGLShader.hpp"
+#include "renderer/renderer2D.hpp"
 namespace scivibe{
 
     Renderer::SceneData* Renderer::m_SceneData = new Renderer::SceneData;
     
     void Renderer::Init(){
         RenderCommand::Init();
+        Renderer2D::Init();
     }
     void Renderer::BeginScene(OrthographicCamera& camera){
         m_SceneData->ViewProjectionMatrix = camera.GetViewProjectionMatrix();
@@ -19,8 +21,8 @@ namespace scivibe{
     }    
     void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray> &vertexArray, const glm::mat4 transform ){
         shader->Bind();
-        std::dynamic_pointer_cast<OpenGLShader>(shader)->setUniformMat4("uViewProjection",m_SceneData->ViewProjectionMatrix);
-        std::dynamic_pointer_cast<OpenGLShader>(shader)->setUniformMat4("uTransform",transform);
+        shader->SetMat4("uViewProjection",m_SceneData->ViewProjectionMatrix);
+        shader->SetMat4("uTransform",transform);
         //mi.bind()
         vertexArray->Bind();
         RenderCommand::DrawIndexed(vertexArray);

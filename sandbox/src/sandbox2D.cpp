@@ -3,6 +3,8 @@
 #include "plateform/OpenGl/OpenGLShader.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "renderer/renderer2D.hpp"
+#include <chrono>
 
 
 Sandbox2D::Sandbox2D()
@@ -11,50 +13,55 @@ Sandbox2D::Sandbox2D()
 
 }
 void Sandbox2D::OnAttach(){
-    m_VertexArrayBlue = scivibe::VertexArray::Create();
-    float squareVertices[4*3] {
-        -0.5f,  -0.5f,  0.0f,
-        0.5f,   -0.5f,  0.0f, 
-        0.5f,   0.5f,   0.0f, 
-        -0.5f,  0.5f,   0.0f
-    };
-    scivibe::Ref<scivibe::VertexBuffer> squareVertexBuffer;
-    squareVertexBuffer.reset(scivibe::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
-    scivibe::BufferLayout squareLayout {
-        {scivibe::ShaderDataType::Float3, "aPosition"}
-    };
-    squareVertexBuffer->SetLayout(squareLayout);
-    m_VertexArrayBlue->AddVertexBuffer(squareVertexBuffer);
-    uint32_t squareIndices[6] = {0,1,2,2,3,0};
-
-    scivibe::Ref<scivibe::IndexBuffer> squareBuffer;
-    squareBuffer.reset(scivibe::IndexBuffer::Create(squareIndices, sizeof(squareIndices)/ sizeof(uint32_t)));
-    m_VertexArrayBlue->SetIndexBuffer(squareBuffer);
-    m_FlatColorShader = scivibe::Shader::Create( 
-        SHADER_SANDBOX_PATH "FlatColor.glsl"
-    );
+    m_TextureTest = scivibe::Texture2D::Create(IMAGE_SANDBOX_PATH "chess.png");
+    
 }
 void Sandbox2D::OnDetach(){
 
 }
         
 void Sandbox2D::OnUpdate(scivibe::Timestep ts ){
+
     m_CameraController.OnUpdate(ts);
 
     scivibe::RenderCommand::SetClearColor({0.0f,0.0f,0.0f,0.0f});
     scivibe::RenderCommand::Clear();
-    scivibe::Renderer::BeginScene(m_CameraController.GetCamera());
+    scivibe::Renderer2D::ResetStats();
 
-    //glm::mat4 transform = glm::translate(glm::mat4(1.0f),m_squarePosition);
-    std::dynamic_pointer_cast<scivibe::OpenGLShader>(m_FlatColorShader)->Bind();
-    std::dynamic_pointer_cast<scivibe::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat4("uColor",m_Color);
-    //m_FlatColorShader->Bind();
-    scivibe::Renderer::Submit(m_FlatColorShader, m_VertexArrayBlue,  glm::scale(glm::mat4(1.0f),glm::vec3(1.5f)));
-    scivibe::Renderer::EndScene();
+    scivibe::Renderer2D::BeginScene(m_CameraController.GetCamera());
+    auto now = std::chrono::steady_clock::now();
+    float time = std::chrono::duration<float>( now.time_since_epoch() ).count();
+    scivibe::Renderer2D::DrawQuad({1.0f, 1.0f, -0.1f},{std::sinf(time) * 1.0f, std::sinf(time)* 1.0f},time,m_TextureTest, 10.0f,{0.3f,0.3f,0.3f,1.0f});
+    scivibe::Renderer2D::DrawQuad({cos(time) * 1.0f, sin(time) * 1.0f, 0.0f},{std::sinf(time) * 1.0f, std::sinf(time)* 1.0f},time,{0.7f,0.7f,1.0f,1.0f});
+    
+    scivibe::Renderer2D::EndScene();
+
+    scivibe::Renderer2D::BeginScene(m_CameraController.GetCamera());
+    for(float y = -0.5f;y<5.0f;y+=0.5f){
+        for(float x = -0.5f;x<5.0f;x+=0.5f){
+            glm::vec4 color {(x+5.0f)/10.0f,0.4f,(y+5.0f)/10.0f,0.5f };
+            scivibe::Renderer2D::DrawQuad({x,y}, {0.45f,0.45f},color);
+        }
+    }
+    scivibe::Renderer2D::EndScene();
+
 
 }
 void Sandbox2D::OnImGuiRender(){
     ImGui::Begin("Settings");
+    auto stats = scivibe::Renderer2D::GetStats();
+    ImGui::Text("Renderer2D stats:");
+    ImGui::Text("DrawCalls %d",stats.DrawCalls);
+    ImGui::Text("Quads %d: ",stats.QuadCount);
+    ImGui::Text("Vertices %d", stats.GetTotalVertexCount());
+    ImGui::Text("Indices %d", stats.GetTotalIndexCount());
+
+    ImGui::Text("General informations:");
+    const auto deltaTime = scivibe::Application::GetDeltaTime();
+    const int fps = static_cast<int>(ImGui::GetIO().Framerate);
+    ImGui::Text("Fps : %d", fps );
+
+    
     ImGui::ColorEdit4("square Color", glm::value_ptr(m_Color));
     ImGui::End();
 

@@ -24,14 +24,20 @@ namespace scivibe{
 
 
         void setBool(const std::string &name, bool value) const;
-        void setInt(const std::string &name, int value) const;
+        void SetInt(const std::string &name, int value) const override;
+        void SetIntArray(const std::string& name, int* values, uint32_t count ) override;
         void UploadUniformInt(const std::string &name, const int value) const;
         void UploadUniformFloat(const std::string &name, const float value) const;
         void UploadUniformFloat2(const std::string &name, const glm::vec2& value) const;
         void UploadUniformFloat3(const std::string &name, const glm::vec3& value) const;
         void UploadUniformFloat4(const std::string &name, const glm::vec4& value) const;
-        void setUniformMat3(const std::string& name, const glm::mat3& mat);
-        void setUniformMat4(const std::string& name, const glm::mat4& mat);
+        void SetUniformMat3(const std::string& name, const glm::mat3& mat);
+        void SetUniformMat4(const std::string& name, const glm::mat4& mat);
+
+        virtual void SetFloat(const std::string& name, const float value) override;
+        virtual void SetFloat3(const std::string& name, const glm::vec3& value ) override;
+        virtual void SetFloat4(const std::string& name,const glm::vec4& value ) override;
+        virtual void SetMat4(const std::string& name, const glm::mat4& value )   override;
 
         
 

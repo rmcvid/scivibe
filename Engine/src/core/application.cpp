@@ -8,12 +8,14 @@
 #include "gui/imGuiLayer.hpp"
 #include "renderer/renderer.hpp"
 #include <cstdint>
-
+#include <chrono>
+#include <thread>
 
 namespace scivibe {
 #define BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
 
     Application* Application::s_Instance = nullptr;
+    Timestep Application::s_DeltaTime{0.0};
 
     static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type){
         switch (type){
@@ -77,20 +79,17 @@ namespace scivibe {
     }
 
     void Application::Run() {
-        //SCIVIBE_CORE_INFO("Application running...");
-        //WindowResizeEvent e(1280, 720);
-        //SCIVIBE_TRACE(e);
-
-        //Renderer::Flush();
-
+        bool firstFrame = true;
+        m_LastFrameTime = glfwGetTime();
         while (m_Running) {
 
-            double time = glfwGetTime();
-            Timestep deltaTime = time - m_LastFrameTime;
+            const double time = glfwGetTime();
+            s_DeltaTime = firstFrame ? 0.0 : time - m_LastFrameTime;
             m_LastFrameTime = time;
+            firstFrame = false;
             if(!m_Minimized){
                 for (Layer* layer : m_LayerStack){
-                   layer->OnUpdate(deltaTime);
+                   layer->OnUpdate(s_DeltaTime);
                 }
                 
             }
@@ -101,6 +100,16 @@ namespace scivibe {
             }
             m_ImGuiLayer->End();
             m_window->onUpdate();
+
+            if (m_Running && targetFPS > 0) {
+                const double targetDuration = 1.0 / targetFPS;
+                const double elapsed = glfwGetTime() - time;
+                const double remaining = targetDuration - elapsed;
+
+                if (remaining > 0.0) {
+                    std::this_thread::sleep_for( std::chrono::duration<double>(remaining));
+                }
+            }
         }
     }
 

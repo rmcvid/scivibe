@@ -19,8 +19,7 @@ class ExampleLayer : public scivibe::Layer
                 0.5f,-0.5f, 0.0f, 0.2f,0.3f,0.8f,1.0f,
                 -0.0f, 0.5f, 0.0f, 0.1f,0.9f,0.2f,1.0f
             };
-            scivibe::Ref<scivibe::VertexBuffer> vertexBuffer;
-            vertexBuffer.reset(scivibe::VertexBuffer::Create(vertices, sizeof(vertices)));
+            scivibe::Ref<scivibe::VertexBuffer> vertexBuffer = scivibe::VertexBuffer::Create(vertices, sizeof(vertices));
             scivibe::BufferLayout layout {
                 {scivibe::ShaderDataType::Float3, "aPosition"},
                 {scivibe::ShaderDataType::Float4, "aColor"}
@@ -28,8 +27,7 @@ class ExampleLayer : public scivibe::Layer
             vertexBuffer->SetLayout(layout);
             m_VertexArray->AddVertexBuffer(vertexBuffer);
             uint32_t indices[3] = {0,1,2};
-            scivibe::Ref<scivibe::IndexBuffer> indexBuffer;
-            indexBuffer.reset(scivibe::IndexBuffer::Create(indices, sizeof(indices)/ sizeof(uint32_t)));
+            scivibe::Ref<scivibe::IndexBuffer> indexBuffer = scivibe::IndexBuffer::Create(indices, sizeof(indices)/ sizeof(uint32_t));
             m_VertexArray->SetIndexBuffer(indexBuffer);
             m_Shader =scivibe::Shader::Create(
                 "shader",
@@ -43,8 +41,7 @@ class ExampleLayer : public scivibe::Layer
                  0.5f, 0.5f, 0.0f, 1.0f,1.0f,
                 -0.5f, 0.5f, 0.0f, 0.0f,1.0f
             };
-            scivibe::Ref<scivibe::VertexBuffer> squareVertexBuffer;
-            squareVertexBuffer.reset(scivibe::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
+            scivibe::Ref<scivibe::VertexBuffer> squareVertexBuffer = scivibe::VertexBuffer::Create(squareVertices, sizeof(squareVertices));
             scivibe::BufferLayout squareLayout {
                 {scivibe::ShaderDataType::Float3, "aPosition"},
                 {scivibe::ShaderDataType::Float2, "aTexCoord"}
@@ -53,8 +50,7 @@ class ExampleLayer : public scivibe::Layer
             m_VertexArrayBlue->AddVertexBuffer(squareVertexBuffer);
             uint32_t squareIndices[6] = {0,1,2,2,3,0};
 
-            scivibe::Ref<scivibe::IndexBuffer> squareBuffer;
-            squareBuffer.reset(scivibe::IndexBuffer::Create(squareIndices, sizeof(squareIndices)/ sizeof(uint32_t)));
+            scivibe::Ref<scivibe::IndexBuffer> squareBuffer = scivibe::IndexBuffer::Create(squareIndices, sizeof(squareIndices)/ sizeof(uint32_t));
             m_VertexArrayBlue->SetIndexBuffer(squareBuffer);
             m_FlatColorShader = scivibe::Shader::Create( 
                 "flat",

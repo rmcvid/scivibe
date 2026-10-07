@@ -14,9 +14,9 @@ namespace scivibe{
             const float GetRotation(){return m_Rotation ;}
             void setRotation(float rotation){m_Rotation = rotation;RecalculateViewMatrix();}
 
-            const glm::mat4& GetProjectionMatrix(){return m_ProjectionMatrix;}
-            const glm::mat4& GetViewMatrix(){return m_ViewMatrix;}
-            const glm::mat4& GetViewProjectionMatrix(){return m_ViewProjectionMatrix;}
+            const glm::mat4& GetProjectionMatrix() const {return m_ProjectionMatrix;}
+            const glm::mat4& GetViewMatrix() const{return m_ViewMatrix;}
+            const glm::mat4& GetViewProjectionMatrix() const {return m_ViewProjectionMatrix;}
         private:
             void RecalculateViewMatrix();
 

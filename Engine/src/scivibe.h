@@ -36,6 +36,7 @@
 #include "renderer/texture.hpp"
 #include "renderer/camera.hpp"
 #include "renderer/orthographicCameraControler.hpp"
+#include "renderer/renderer2D.hpp"
 
 #include "input/input.hpp"
 

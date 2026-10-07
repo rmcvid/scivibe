@@ -25,6 +25,9 @@ namespace scivibe {
         void PushOverLayer(Layer* overlay);
         inline static Application& Get(){ return *s_Instance; };
         inline Window& GetWindow(){return *m_window;};
+        static Timestep GetDeltaTime(){ return s_DeltaTime;}
+        inline int GetTargetFPS(){ return targetFPS;}
+        inline void SetTargetFPS(int fps){ targetFPS = fps;}
     private :
         bool OnWindowClose(WindowCloseEvent& e);
         bool OnWindowResize(WindowResizeEvent& e);
@@ -34,8 +37,10 @@ namespace scivibe {
         bool m_Running = true;
         bool m_Minimized = false;
         LayerStack m_LayerStack;
-        Timestep m_Timestep;
+        static Timestep s_DeltaTime;
+
         double m_LastFrameTime {0.0};
+        int targetFPS = 60;
         static Application* s_Instance;
     };
     // Optional factory implemented by the client, not exported by the engine.

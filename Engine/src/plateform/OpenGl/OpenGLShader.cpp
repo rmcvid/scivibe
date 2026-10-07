@@ -158,13 +158,19 @@ namespace scivibe{
     void OpenGLShader::setBool(const std::string &name, bool value) const{         
         glUniform1i(glGetUniformLocation(m_ID, name.c_str()), (int)value); 
     }
-    void OpenGLShader::setInt(const std::string &name, int value) const{ 
+    void OpenGLShader::SetInt(const std::string &name, int value) const{ 
             glUniform1i(glGetUniformLocation(m_ID, name.c_str()), value); 
     }
     void OpenGLShader::UploadUniformInt( const std::string& name, int value) const
     {
         glUniform1i(glGetUniformLocation(m_ID, name.c_str()), value);
     }
+    void  OpenGLShader::SetIntArray(const std::string& name, int* values, uint32_t count ){
+        GLint location = glGetUniformLocation(m_ID, name.c_str());
+        glUniform1iv(location, count, values);
+
+    }
+
     void OpenGLShader::UploadUniformFloat(const std::string &name, const float value) const{ 
         glUniform1f(glGetUniformLocation(m_ID, name.c_str()), value); 
     }
@@ -188,12 +194,26 @@ namespace scivibe{
         glUseProgram(0);
 
     }
-    void OpenGLShader::setUniformMat3(const std::string& name, const glm::mat3& mat){
+    void OpenGLShader::SetUniformMat3(const std::string& name, const glm::mat3& mat){
         GLint location = glGetUniformLocation(m_ID,name.c_str());
         glUniformMatrix3fv(location,1,GL_FALSE,glm::value_ptr(mat));
     }
-    void OpenGLShader::setUniformMat4(const std::string& name, const glm::mat4& mat ){
+    void OpenGLShader::SetUniformMat4(const std::string& name, const glm::mat4& mat ){
         
+        GLint location = glGetUniformLocation(m_ID,name.c_str());
+        glUniformMatrix4fv(location,1,GL_FALSE,glm::value_ptr(mat));
+    }
+    void OpenGLShader::SetFloat(const std::string &name, const float value) { 
+        glUniform1f(glGetUniformLocation(m_ID, name.c_str()), value); 
+    }
+
+    void OpenGLShader::SetFloat3(const std::string& name, const glm::vec3& value ){
+        glUniform3f(glGetUniformLocation(m_ID, name.c_str()), value.x,value.y,value.z); 
+    }
+    void OpenGLShader::SetFloat4(const std::string& name, const glm::vec4& value ){
+        glUniform4f(glGetUniformLocation(m_ID, name.c_str()), value.x,value.y,value.z,value.w); 
+    }
+    void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& mat ){
         GLint location = glGetUniformLocation(m_ID,name.c_str());
         glUniformMatrix4fv(location,1,GL_FALSE,glm::value_ptr(mat));
     }
