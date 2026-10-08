@@ -16,3 +16,6 @@
 [submodule "Engine/external/stb"]
 	path = Engine/external/stb
 	url = https://github.com/nothings/stb.git
+[submodule "Engine/external/ffmpeg"]
+	path = Engine/external/ffmpeg
+	url = https://github.com/FFmpeg/FFmpeg.git
