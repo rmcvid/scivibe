@@ -24,10 +24,6 @@ namespace scivibe {
     {
         SCIVIBE_CORE_INFO("Video Recorder Created");
     }
-    Scope<WindowRecorder> WindowRecorder::Create(){
-        return CreateScope<ffmpegRecorder>();
-    }
-
     ffmpegRecorder::~ffmpegRecorder() noexcept {
         try {
             StopRecording();
@@ -37,7 +33,8 @@ namespace scivibe {
         }
     }
 
-    void ffmpegRecorder::StartRecording(const std::string& filename) {
+    void ffmpegRecorder::Init(const std::string& filename, const int width, const int height, const int fps){
+        SetCaptureData(width,height,fps);
         if (m_IsRecording)
             throw std::logic_error("Un enregistrement est deja en cours");
         if (filename.empty() || m_FrameCaptureData.width  <= 0 || m_FrameCaptureData.height <= 0 || m_FrameCaptureData.FPSRecorded <= 0)
@@ -46,7 +43,6 @@ namespace scivibe {
             throw std::invalid_argument("YUV420P exige une largeur et une hauteur paires");
         if (m_FrameCaptureData.width > (std::numeric_limits<int>::max)() / 4)
             throw std::invalid_argument("Largeur trop grande pour un stride RGBA");
-
         ReleaseResources();
         try {
             CheckFFmpeg(avformat_alloc_output_context2(
@@ -90,31 +86,33 @@ namespace scivibe {
             m_Packet = av_packet_alloc();
             if (!m_Frame || !m_Packet)
                 throw std::bad_alloc();
-
             m_Frame->format = m_CodecContext->pix_fmt;
             m_Frame->width = m_FrameCaptureData.width;
             m_Frame->height = m_FrameCaptureData.height;
             CheckFFmpeg(av_frame_get_buffer(m_Frame, 32), "Allocation des pixels video");
-
             m_SwsContext = sws_getContext(
                 m_FrameCaptureData.width, m_FrameCaptureData.height, AV_PIX_FMT_RGBA,
                 m_FrameCaptureData.width, m_FrameCaptureData.height, m_CodecContext->pix_fmt,
                 SWS_BILINEAR, nullptr, nullptr, nullptr);
             if (!m_SwsContext)
                 SCIVIBE_CORE_ERROR("Creation du convertisseur RGBA vers YUV420P impossible");
-
             if (!(m_FormatContext->oformat->flags & AVFMT_NOFILE)) {
                 CheckFFmpeg(avio_open(&m_FormatContext->pb, filename.c_str(), AVIO_FLAG_WRITE),
                             "Ouverture du fichier video");
             }
-
             CheckFFmpeg(avformat_write_header(m_FormatContext, nullptr), "Ecriture de l'en-tete video");
             m_LastPts = AV_NOPTS_VALUE;
-            m_IsRecording = true;
         } catch (...) {
             ReleaseResources();
             throw;
         }
+    }
+
+    void ffmpegRecorder::StartRecording(const double time) {
+        /* start the recording and replace the time begining*/
+        if (m_IsRecording) throw std::logic_error("Un enregistrement est deja en cours");
+        SetRecordingStartTime(time);
+        m_IsRecording = true;
     }
 
     void ffmpegRecorder::StopRecording() {

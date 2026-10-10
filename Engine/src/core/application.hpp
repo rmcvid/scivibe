@@ -10,7 +10,7 @@
 #include "renderer/buffer.hpp"
 #include "renderer/vertexArray.hpp"
 #include "renderer/camera.hpp"
-#include "media/windowRecorder.hpp"
+#include "media/recorder.hpp"
 #include "constants/constant.hpp"
 namespace scivibe {
     class SCIVIBE_API Application {
@@ -26,16 +26,17 @@ namespace scivibe {
         void PushOverLayer(Layer* overlay);
         inline static Application& Get(){ return *s_Instance; };
         inline Window& GetWindow(){return *m_window;};
-        void StartRecording(const std::string& filename, int fps = FPS_RECORD);
-        void StopRecording();
+        void InitRecording(const std::string& filename, int fps = FPS_RECORD);
+        void StartRecording();
         void RecordFrame();
+        void StopRecording();
         static Timestep GetDeltaTime(){ return s_DeltaTime;}
         int GetTargetFPS() const { return s_FrameRateData.TargetFPS; }
         // Zero disables the software limit; VSync is controlled independently.
         void SetTargetFPS(int fps) { s_FrameRateData.TargetFPS = fps > 0 ? fps : 0; }
         int GetFPS() const { return s_FrameRateData.FPS; }
         double GetAverageFrameMilliseconds() const { return s_FrameRateData.AverageFrameMilliseconds; }
-        bool IsRecording() const {return m_WindowRecorder->IsRecording();}
+        bool IsRecording() const {return m_Recorder->IsRecording();}
         
     private :
         bool OnWindowClose(WindowCloseEvent& e);
@@ -45,7 +46,7 @@ namespace scivibe {
 
         ImGuiLayer* m_ImGuiLayer;
         Scope<Window> m_window;
-        Scope<WindowRecorder> m_WindowRecorder;
+        Scope<Recorder> m_Recorder;
         
         bool m_Running = true;
         bool m_Minimized = false;
@@ -68,6 +69,5 @@ namespace scivibe {
         static FrameRateData s_FrameRateData;
         CapturedFrame m_CapturedFrame;
     };
-    // Optional factory implemented by the client, not exported by the engine.
     Application* CreateApplication();
 }

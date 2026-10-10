@@ -68,27 +68,20 @@ void Sandbox2D::OnImGuiRender(){
     ImGui::Text("Delta time: %.2f ms", deltaTime.GetMiliseconds());
 
     int targetFPS = app.GetTargetFPS();
-    if (ImGui::InputInt("Target FPS", &targetFPS, 10, 60))
-        app.SetTargetFPS(targetFPS);
+    if (ImGui::InputInt("Target FPS", &targetFPS, 10, 60)) app.SetTargetFPS(targetFPS);
     ImGui::TextDisabled("0 = no software limit");
-
     bool vsync = app.GetWindow().IsVSync();
-    if (ImGui::Checkbox("VSync", &vsync))
-        app.GetWindow().SetVSync(vsync);
-    if (vsync)
-        ImGui::TextDisabled("VSync also limits FPS to the display refresh rate.");
-
-    
+    if (ImGui::Checkbox("VSync", &vsync)) app.GetWindow().SetVSync(vsync);
+    if (vsync) ImGui::TextDisabled("VSync also limits FPS to the display refresh rate.");
     ImGui::ColorEdit4("square Color", glm::value_ptr(m_Color));
-
     ImGui::Separator();
     try {
         if (!app.IsRecording()) {
             if (ImGui::Button("Demarrer l'enregistrement")) {
                 scivibe::CapturedFrame frame;
-                // Recupere les dimensions reelles du framebuffer.
                 if (app.GetWindow().CaptureFrame(frame)) {
-                    app.StartRecording( VIDEO_SANDBOX_PATH "capture.mp4", 60);
+                    app.InitRecording(VIDEO_SANDBOX_PATH "capture.mp4", 60);
+                    app.StartRecording();
                 } else {
                     SCIVIBE_ERROR("Impossible de capturer la fenetre");
                 }

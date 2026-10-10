@@ -14,7 +14,8 @@ namespace scivibe {
         ffmpegRecorder& operator=(const ffmpegRecorder&) = delete;
 
         // Les operations signalent leurs erreurs par des exceptions.
-        void StartRecording(const std::string& filename) override;
+        void Init(const std::string& filename, const int width, const int height, const int fps) override;
+        void StartRecording(const double time) override;
         void StopRecording() override;
         // pts est strictement croissant, en unites de 1/fps, et commence a zero ou plus.
         void RecordFrame(const uint8_t* rgba, int strideBytes, int64_t pts) override;

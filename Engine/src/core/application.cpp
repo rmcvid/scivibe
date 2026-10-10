@@ -17,8 +17,6 @@ namespace scivibe {
     Application* Application::s_Instance = nullptr;
     Timestep Application::s_DeltaTime{0.0};
     Application::FrameRateData Application::s_FrameRateData{};
-    
-    
 
     static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type){
         switch (type){
@@ -47,7 +45,7 @@ namespace scivibe {
         m_window = Scope<Window>(Window::Create());
         m_window->SetEventCallback(BIND_EVENT_FN(onEvent));
 
-        m_WindowRecorder = Scope<WindowRecorder>(WindowRecorder::Create());
+        m_Recorder = Scope<Recorder>(new Recorder());
 
         Renderer::Init();
         m_ImGuiLayer = new ImGuiLayer();
@@ -58,7 +56,7 @@ namespace scivibe {
     Application::~Application() { 
         // Release static GPU resources while the window's GL context still exists.
         Renderer2D::Shutdown();
-        m_WindowRecorder.reset();
+        m_Recorder.reset();
         SCIVIBE_CORE_INFO("Application destroyed");
     }
 
@@ -85,35 +83,25 @@ namespace scivibe {
             }
         }
     }
-
-    void Application::StartRecording(const std::string& filename, int fps){
-        /*ici plutot donner les information au window recorder non ?*/
-        // Mettre a jour l'etat seulement si le recorder demarre correctement.
-        m_WindowRecorder->SetCaptureData( m_window->GetWidth(), m_window->GetHeight(), fps,glfwGetTime());
-        m_WindowRecorder->StartRecording(filename);
+    void Application::InitRecording(const std::string& filename, int fps){
+        m_Recorder->Init(filename,m_window->GetWidth(),m_window->GetHeight(),fps);
+    }
+    void Application::StartRecording(){
+        m_Recorder->StartRecording();
     }
     void Application::StopRecording(){
-        m_WindowRecorder->StopRecording();
+        m_Recorder->StopRecording();
     }
-    void Application::RecordFrame(){
-        const int64_t pts = static_cast<int64_t>(
-                    (glfwGetTime() - m_WindowRecorder->GetRecordingStartTime()) *m_WindowRecorder->GetFPS());
-        if (pts > m_WindowRecorder->GetLastRecordingPts() && m_window->CaptureFrame(m_CapturedFrame)){
-            const auto& frame = m_CapturedFrame;
-            if (frame.Width != m_WindowRecorder->GetWidth() || frame.Height != m_WindowRecorder->GetHeight()) {
-                StopRecording();
-            }
-            else {
-                const uint8_t* topRow = frame.Pixels.data() + static_cast<size_t>(frame.Height - 1) * frame.StrideBytes;
-                m_WindowRecorder->RecordFrame(topRow,-frame.StrideBytes,pts);
-                m_WindowRecorder->SetLastRecordingPts(pts);
-            }
-        }
+
+    void Application::RecordFrame() {
+    if (m_window->CaptureFrame(m_CapturedFrame)) {
+        m_Recorder->SubmitFrame(m_CapturedFrame);
     }
+}
 
     void Application::Run(){
         while (m_Running) {
-            const double time = glfwGetTime();
+            const double time = Timestep::GetTime();
             m_window->PollEvents();
             if (!m_Running) break;
             frameRateDataCalcul(time);
@@ -123,7 +111,7 @@ namespace scivibe {
                 }    
             }
 
-            if(m_WindowRecorder->IsRecording()){
+            if(m_Recorder->IsRecording()){
                 RecordFrame();
             }
 
@@ -177,11 +165,11 @@ namespace scivibe {
     } else {
         s_FrameRateData.NextFrameTime += interval;
     }
-    const double now = glfwGetTime();
+    const double now = Timestep::GetTime();
     if (s_FrameRateData.NextFrameTime < now) s_FrameRateData.NextFrameTime = now;
     s_FrameRateData.PreviousTargetFPS = s_FrameRateData.TargetFPS;
     while (m_Running) {
-        const double remaining = s_FrameRateData.NextFrameTime - glfwGetTime();
+        const double remaining = s_FrameRateData.NextFrameTime - Timestep::GetTime();
         if (remaining <= 0.0)
             break;
         m_window->WaitEvents(remaining);
