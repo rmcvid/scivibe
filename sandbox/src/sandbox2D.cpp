@@ -1,10 +1,12 @@
 #include "sandbox2D.hpp"
+#include <exception>
 #include <imgui.h>
 #include "plateform/OpenGl/OpenGLShader.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "renderer/renderer2D.hpp"
 #include <chrono>
+#include <cfloat>
 
 
 Sandbox2D::Sandbox2D()
@@ -48,6 +50,7 @@ void Sandbox2D::OnUpdate(scivibe::Timestep ts ){
 
 }
 void Sandbox2D::OnImGuiRender(){
+    ImGui::SetNextWindowSizeConstraints(ImVec2(400.0f, 360.0f), ImVec2(FLT_MAX, FLT_MAX));
     ImGui::Begin("Settings");
     auto stats = scivibe::Renderer2D::GetStats();
     ImGui::Text("Renderer2D stats:");
@@ -56,13 +59,47 @@ void Sandbox2D::OnImGuiRender(){
     ImGui::Text("Vertices %d", stats.GetTotalVertexCount());
     ImGui::Text("Indices %d", stats.GetTotalIndexCount());
 
-    ImGui::Text("General informations:");
+    ImGui::Separator();
+    ImGui::Text("Frame timing");
+    auto& app = scivibe::Application::Get();
     const auto deltaTime = scivibe::Application::GetDeltaTime();
-    const int fps = static_cast<int>(ImGui::GetIO().Framerate);
-    ImGui::Text("Fps : %d", fps );
+    ImGui::Text("FPS (average): %d", app.GetFPS());
+    ImGui::Text("Frame (average): %.2f ms", app.GetAverageFrameMilliseconds());
+    ImGui::Text("Delta time: %.2f ms", deltaTime.GetMiliseconds());
+
+    int targetFPS = app.GetTargetFPS();
+    if (ImGui::InputInt("Target FPS", &targetFPS, 10, 60))
+        app.SetTargetFPS(targetFPS);
+    ImGui::TextDisabled("0 = no software limit");
+
+    bool vsync = app.GetWindow().IsVSync();
+    if (ImGui::Checkbox("VSync", &vsync))
+        app.GetWindow().SetVSync(vsync);
+    if (vsync)
+        ImGui::TextDisabled("VSync also limits FPS to the display refresh rate.");
 
     
     ImGui::ColorEdit4("square Color", glm::value_ptr(m_Color));
+
+    ImGui::Separator();
+    try {
+        if (!app.IsRecording()) {
+            if (ImGui::Button("Demarrer l'enregistrement")) {
+                scivibe::CapturedFrame frame;
+                // Recupere les dimensions reelles du framebuffer.
+                if (app.GetWindow().CaptureFrame(frame)) {
+                    app.StartRecording( VIDEO_SANDBOX_PATH "capture.mp4", 60);
+                } else {
+                    SCIVIBE_ERROR("Impossible de capturer la fenetre");
+                }
+            }
+        } else {
+            ImGui::TextUnformatted("Enregistrement en cours");
+            if (ImGui::Button("Arreter l'enregistrement")) app.StopRecording();
+        }
+    } catch (const std::exception& error) {
+        SCIVIBE_ERROR("Enregistrement : {}", error.what());
+    }
     ImGui::End();
 
 };

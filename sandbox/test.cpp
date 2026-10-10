@@ -144,7 +144,9 @@ class ExampleLayer : public scivibe::Layer
 class Sandbox : public scivibe::Application{
     public:
         Sandbox(){
+            Application::Get().GetWindow().SetVSync(false);
             //PushLayer(new ExampleLayer());
+            
             PushLayer(new Sandbox2D());
 
         }

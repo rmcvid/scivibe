@@ -94,6 +94,17 @@ namespace scivibe{
 
     }
     void Renderer2D::Shutdown(){
+        // s_Data is static: never leave GPU objects for destruction after the window.
+        s_Data.TextureSlots.fill(nullptr);
+        s_Data.WhiteTexture.reset();
+        s_Data.TextureShader.reset();
+        s_Data.QuadVertexArray.reset();
+        s_Data.QuadVertexBuffer.reset();
+        delete[] s_Data.QuadVertexBufferBase;
+        s_Data.QuadVertexBufferBase = nullptr;
+        s_Data.QuadVertexBufferPtr = nullptr;
+        s_Data.QuadIndexCount = 0;
+        s_Data.TextureSlotIndex = 1;
     }
     
     void Renderer2D::BeginScene(const OrthographicCamera& camera){

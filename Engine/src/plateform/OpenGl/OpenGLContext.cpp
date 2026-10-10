@@ -24,4 +24,20 @@ namespace scivibe{
     void OpenGLContext::SwapBuffers(){
         glfwSwapBuffers(m_windowHandle);   
     }
+    bool OpenGLContext::CaptureFrame(CapturedFrame& frame){
+    glfwGetFramebufferSize(m_windowHandle,&frame.Width,&frame.Height);
+    if (frame.Width <= 0 || frame.Height <= 0)
+        return false;
+    constexpr int channels = 4;
+    frame.StrideBytes = frame.Width * channels;
+    frame.Pixels.resize(static_cast<size_t>(frame.StrideBytes) *static_cast<size_t>(frame.Height));
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(0,0,frame.Width,frame.Height,GL_RGBA,GL_UNSIGNED_BYTE,frame.Pixels.data());
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR){
+        SCIVIBE_CORE_ERROR("OpenGL CaptureFrame failed: {0}",error);
+        return false;
+    }
+    return true;
+}
 }

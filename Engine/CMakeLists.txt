@@ -29,6 +29,7 @@ add_subdirectory(external/spdlog)
 
 find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/ScivibeFFmpeg.cmake")
 
 # The generated OpenGL 3.3 core loader is bundled with the engine.
 add_library(scivibe_glad STATIC external/glad/src/glad.c)
@@ -66,6 +67,7 @@ if(SCIVIBE_SHADERS)
     set_source_files_properties(${SCIVIBE_SHADERS} PROPERTIES HEADER_FILE_ONLY TRUE)
 endif()
 add_library(scivibe SHARED ${SCIVIBE_SOURCES} ${SCIVIBE_SHADERS})
+add_dependencies(scivibe scivibe_ffmpeg_build)
 set_target_properties(scivibe PROPERTIES
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN YES
@@ -121,6 +123,7 @@ target_link_libraries(scivibe
     PRIVATE
         scivibe_stb_image
     PUBLIC
+        FFmpeg::FFmpeg
         # Propagate headers, but keep the OBJECT files in the engine only.
         scivibe_imgui
         scivibe_glad

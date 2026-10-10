@@ -10,6 +10,8 @@ namespace scivibe {
             OpenGLContext(GLFWwindow* windowHandle);
             void Init() override;
             void SwapBuffers() override;
+            bool CaptureFrame(CapturedFrame& frame) override;
+
         private:
             GLFWwindow* m_windowHandle;
     };

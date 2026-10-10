@@ -7,15 +7,18 @@
 #include "window/windowInput.hpp"
 #include "gui/imGuiLayer.hpp"
 #include "renderer/renderer.hpp"
+#include "renderer/renderer2D.hpp"
 #include <cstdint>
-#include <chrono>
-#include <thread>
+#include <cmath>
 
 namespace scivibe {
 #define BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
 
     Application* Application::s_Instance = nullptr;
     Timestep Application::s_DeltaTime{0.0};
+    Application::FrameRateData Application::s_FrameRateData{};
+    
+    
 
     static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type){
         switch (type){
@@ -44,6 +47,8 @@ namespace scivibe {
         m_window = Scope<Window>(Window::Create());
         m_window->SetEventCallback(BIND_EVENT_FN(onEvent));
 
+        m_WindowRecorder = Scope<WindowRecorder>(WindowRecorder::Create());
+
         Renderer::Init();
         m_ImGuiLayer = new ImGuiLayer();
         PushOverLayer(m_ImGuiLayer); 
@@ -51,6 +56,9 @@ namespace scivibe {
         
     }
     Application::~Application() { 
+        // Release static GPU resources while the window's GL context still exists.
+        Renderer2D::Shutdown();
+        m_WindowRecorder.reset();
         SCIVIBE_CORE_INFO("Application destroyed");
     }
 
@@ -78,20 +86,45 @@ namespace scivibe {
         }
     }
 
-    void Application::Run() {
-        bool firstFrame = true;
-        m_LastFrameTime = glfwGetTime();
-        while (m_Running) {
+    void Application::StartRecording(const std::string& filename, int fps){
+        /*ici plutot donner les information au window recorder non ?*/
+        // Mettre a jour l'etat seulement si le recorder demarre correctement.
+        m_WindowRecorder->SetCaptureData( m_window->GetWidth(), m_window->GetHeight(), fps,glfwGetTime());
+        m_WindowRecorder->StartRecording(filename);
+    }
+    void Application::StopRecording(){
+        m_WindowRecorder->StopRecording();
+    }
+    void Application::RecordFrame(){
+        const int64_t pts = static_cast<int64_t>(
+                    (glfwGetTime() - m_WindowRecorder->GetRecordingStartTime()) *m_WindowRecorder->GetFPS());
+        if (pts > m_WindowRecorder->GetLastRecordingPts() && m_window->CaptureFrame(m_CapturedFrame)){
+            const auto& frame = m_CapturedFrame;
+            if (frame.Width != m_WindowRecorder->GetWidth() || frame.Height != m_WindowRecorder->GetHeight()) {
+                StopRecording();
+            }
+            else {
+                const uint8_t* topRow = frame.Pixels.data() + static_cast<size_t>(frame.Height - 1) * frame.StrideBytes;
+                m_WindowRecorder->RecordFrame(topRow,-frame.StrideBytes,pts);
+                m_WindowRecorder->SetLastRecordingPts(pts);
+            }
+        }
+    }
 
+    void Application::Run(){
+        while (m_Running) {
             const double time = glfwGetTime();
-            s_DeltaTime = firstFrame ? 0.0 : time - m_LastFrameTime;
-            m_LastFrameTime = time;
-            firstFrame = false;
+            m_window->PollEvents();
+            if (!m_Running) break;
+            frameRateDataCalcul(time);
             if(!m_Minimized){
                 for (Layer* layer : m_LayerStack){
                    layer->OnUpdate(s_DeltaTime);
-                }
-                
+                }    
+            }
+
+            if(m_WindowRecorder->IsRecording()){
+                RecordFrame();
             }
 
             m_ImGuiLayer->Begin();
@@ -99,19 +132,27 @@ namespace scivibe {
                 layer->OnImGuiRender();
             }
             m_ImGuiLayer->End();
-            m_window->onUpdate();
-
-            if (m_Running && targetFPS > 0) {
-                const double targetDuration = 1.0 / targetFPS;
-                const double elapsed = glfwGetTime() - time;
-                const double remaining = targetDuration - elapsed;
-
-                if (remaining > 0.0) {
-                    std::this_thread::sleep_for( std::chrono::duration<double>(remaining));
-                }
-            }
+            m_window->SwapBuffers();
+            AppWait();
         }
     }
+
+    void Application::frameRateDataCalcul(double time){
+        s_DeltaTime = s_FrameRateData.firstFrame ? 0.0 : time - m_LastFrameTime;
+            m_LastFrameTime = time;
+            s_FrameRateData.firstFrame = false;
+            if (s_DeltaTime.GetSeconds() > 0.0) {
+                s_FrameRateData.sampleSeconds += s_DeltaTime.GetSeconds();
+                ++s_FrameRateData.sampleFrames;
+                if (s_FrameRateData.sampleSeconds >= 0.5) {
+                    s_FrameRateData.FPS = static_cast<int>(std::lround(s_FrameRateData.sampleFrames / s_FrameRateData.sampleSeconds));
+                    s_FrameRateData.AverageFrameMilliseconds = 1000.0 * s_FrameRateData.sampleSeconds / s_FrameRateData.sampleFrames;
+                    s_FrameRateData.sampleSeconds = 0.0;
+                    s_FrameRateData.sampleFrames = 0;
+                }
+            }
+    }
+
 
     bool Application::OnWindowClose(WindowCloseEvent &e){
         m_Running = false;
@@ -127,5 +168,24 @@ namespace scivibe {
         Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
         return false;
     }
+
+   void Application::AppWait() {
+    if (s_FrameRateData.TargetFPS <= 0) {s_FrameRateData.NextFrameTime = 0.0;s_FrameRateData.PreviousTargetFPS = 0;return;}
+    const double interval = 1.0 / static_cast<double>(s_FrameRateData.TargetFPS);
+    if (s_FrameRateData.NextFrameTime == 0.0 || s_FrameRateData.TargetFPS != s_FrameRateData.PreviousTargetFPS) { 
+        s_FrameRateData.NextFrameTime = m_LastFrameTime + interval;
+    } else {
+        s_FrameRateData.NextFrameTime += interval;
+    }
+    const double now = glfwGetTime();
+    if (s_FrameRateData.NextFrameTime < now) s_FrameRateData.NextFrameTime = now;
+    s_FrameRateData.PreviousTargetFPS = s_FrameRateData.TargetFPS;
+    while (m_Running) {
+        const double remaining = s_FrameRateData.NextFrameTime - glfwGetTime();
+        if (remaining <= 0.0)
+            break;
+        m_window->WaitEvents(remaining);
+    }
+}
 
 }

@@ -6,9 +6,12 @@ namespace scivibe{
     static void GLFWErrorCallback(int error, const char* description){
         SCIVIBE_CORE_ERROR("GLFW Error ({0}) : {1}", error, description);
     }
-    
-    Window*  Window::Create(const WindowProps& props){
+    Window* Window::Create(const WindowProps& props){
+        /* ici il faudrait creer la window en fonction de l'OS*/
         return new WindowsWindow(props);
+    }
+    bool WindowsWindow::CaptureFrame(CapturedFrame& frame) {
+        return m_Context->CaptureFrame(frame);
     }
 
     WindowsWindow::WindowsWindow(const WindowProps& props){
@@ -123,8 +126,26 @@ namespace scivibe{
     }
 
     void WindowsWindow::onUpdate(){
+        PollEvents();
+        if (!glfwWindowShouldClose(m_Window))
+            SwapBuffers();
+    }
+    void WindowsWindow::PollEvents(){
         glfwPollEvents();
+    }
+    void WindowsWindow::SwapBuffers(){
         m_Context->SwapBuffers();
+    }
+    void WindowsWindow::WaitEvents(double timeout){
+#ifdef _WIN32
+        m_FrameTimer.WaitForEvents(timeout);
+        glfwPollEvents();
+#else
+        if (timeout > 0.0)
+            glfwWaitEventsTimeout(timeout);
+        else
+            glfwPollEvents();
+#endif
     }
     void WindowsWindow::SetVSync(bool enabled){
         if(enabled){ glfwSwapInterval(1);}

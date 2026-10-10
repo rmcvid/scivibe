@@ -11,6 +11,7 @@
 #include "Events/mouseEvent.hpp"
 
 #include "plateform/OpenGl/OpenGLContext.hpp"
+#include "plateform/windowsFrameTimer.hpp"
 #include <GLFW/glfw3.h>
 
 namespace scivibe {
@@ -21,6 +22,10 @@ namespace scivibe {
         virtual ~WindowsWindow(); 
 
         void onUpdate() override;
+        void PollEvents() override;
+        void SwapBuffers() override;
+        void WaitEvents(double timeout) override;
+        bool CaptureFrame(CapturedFrame& frame) override;
 
         inline unsigned int GetWidth() const override {return m_Data.Width;}
         inline unsigned int GetHeight() const override {return m_Data.Height;}
@@ -46,6 +51,9 @@ namespace scivibe {
         };
 
         WindowData m_Data;
+#ifdef _WIN32
+        WindowsFrameTimer m_FrameTimer;
+#endif
     };
 
 }

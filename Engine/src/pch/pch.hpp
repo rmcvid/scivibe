@@ -14,6 +14,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include<array>
+#include "constants/constant.hpp"
 
 #include <type_traits>
 #include <spdlog/fmt/ostr.h>

@@ -1,0 +1,2 @@
+# Scripts launched by MSYS2 must keep Unix line endings on Windows checkouts.
+*.sh text eol=lf
