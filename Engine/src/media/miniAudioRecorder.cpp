@@ -51,12 +51,12 @@ namespace scivibe{
         m_RecordingStartTime = time;
         CheckAudio(ma_device_start(&m_Device), "Demarrage du microphone");
         m_IsRecording = true;
-        SCIVIBE_CORE_INFO("L'enregistement audio a commencer");
+        SCIVIBE_CORE_INFO("Début de l'enregistrement audio");
     }
     void MiniAudioRecorder::StopRecording() {
         ReleaseResources();
         CheckAudio(m_WriteError.load(),"Ecriture des echantillons audio");
-        SCIVIBE_CORE_INFO("L'enregistement audio a terminer");
+        SCIVIBE_CORE_INFO("Fin de l'enregistrement audio");
     }
 
     void MiniAudioRecorder::DataCallback(ma_device* device, void* output, const void* input, ma_uint32 frameCount){

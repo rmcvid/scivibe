@@ -20,8 +20,8 @@ namespace scivibe{
         }
     }
     void Recorder::StartRecording(){
-        if(m_IsRecording) 
-            throw std::logic_error("Un enregistrement est deja en cours");
+        if (!m_IsInit) throw std::logic_error("Initialiser l'enregistrement avant de demarrer");
+        if(m_IsRecording) throw std::logic_error("Un enregistrement est deja en cours");
         const double time = Timestep::GetTime();
         m_WindowRecorder->StartRecording(time);
         m_AudioRecorder->StartRecording(Timestep::GetTime());
@@ -66,6 +66,5 @@ namespace scivibe{
         SetLastRecordingPts(pts);
     
     }
-    
 
 }

@@ -113,12 +113,14 @@ namespace scivibe {
         if (m_IsRecording) throw std::logic_error("Un enregistrement est deja en cours");
         SetRecordingStartTime(time);
         m_IsRecording = true;
+        SCIVIBE_CORE_INFO("Début de l'enregistrement vidéo");
     }
 
     void ffmpegRecorder::StopRecording() {
         if (!m_IsRecording) { 
             ReleaseResources();
             SCIVIBE_CORE_INFO("Recording stopped:");
+            SCIVIBE_CORE_INFO("Fin de l'enregistrement vidéo");
             return;
         }
 

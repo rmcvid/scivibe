@@ -1,8 +1,7 @@
 # Projet
 
 ## To do pour vendredi 9/10
-- Faire un batching pour le rendering
-- Lier la fenêtre OpenGL à FFmpeg afin de pouvoir enregistrer tout ce qui s'affiche à l'écran
+- gerer l'aliasing
 - Ajouter l'écriture et la gestion de police à le fentre
 - Introduire une interprétation latex pour le rendu de charactère
 - Introduire les objets de base :
@@ -14,6 +13,7 @@
 - Ecrire la vidéo sur les vecteurs pour savoir quoi dessiner ?
 
 # To do ( plus long terme)
+- ajouter un profiling pour identifier les bottles neck, notamment pour l'enregistrement vidéo et audio
 - Vérifier si les fonctions d'ImGui qui ne sont pas utilisées sont quand même exportées vers le client afin qu'il puisse les utiliser (sinon, faire un fichier `.def` ?)
 - Un README qui se respecte
 - ajouter une documentation et des exemples pour les étudiants et collaborateur.
@@ -21,6 +21,17 @@
     - serie de vidéo sur la construction du moteur de jeu Hazel, le moteur a une base similaire: https://www.youtube.com/watch?v=JxIZbV_XjAs&list=PLlrATfBNZ98dC-V-N3m0Go4deliWHPFwT
     - fonctionnement d'OpenGL, les graphismes sont pour le moment uniquement en OpenGL et comprendre son fonctionnement est une réèlle plus value, la programmation graphique est assez différente de ce qu'on ( les physiciens ou ingénieur ) voit à l'université : https://learnopengl.com
     - Pour revoir les bases en cpp : https://www.learncpp.com
+
+## Done récent
+- implémenter ffmpeg
+- implémented miniaudio
+- Batching 2D
+  
+## Probleme superposition audio vidéo:
+Un des problemes qu'on a pendant l'enregistrement est qu'une perte de perfomance momentanée introduit un décalage entre l'audio et l'image qui se cumule. Pour éviter ce problème il existe plusieures posibilitées :
+  - Soit on ne construit pas la vidéo durant l'enregistrement de l'audio mais on record uniquement les actions éffectué par le 'joueur'. Le programme peut en post processing reconstruire exactement le play au nombre d'image souhaité et reconstruire la vidéo par après. Le code n'a actuellement pas pris cette direction et l'implémentation du traqueur et l'enregistrement sans affichage ou lié au nombre d'fps voulu doit etre complement construit
+  - On peut baisser le nombre d'fps dans la vidéo et à l'affichage
+  - On peut introduire un delta entre le nombre d'images réèllement affichée et celles enregistrèes. dans ce cas il faudrait introduire un traqueur qui mettrait des balise afin de pouvoir reconstruire la vidéo en post processing.
 ## Idea
 - Une idée qui pourrait être intéressante serait de relier une caméra à l'ordinateur. En plus d'enregistrer l'affichage, la caméra filmerait la scène, et on pourrait faciliter la synchronisation des deux au montage en notifiant les moments de transition
-- Un des problemes qu'on peut avoir pendant l'enregistrement est une perte de perfomance momentanée car le cpu doit faire une tache ponctuelle. La l'enregistrement des images ne serait plus exactement superposée à l'audio et un décalage se crérait. Pour éviter ca on peut enregistre plus d'image par seconde et reconstruire une vidéo basée sur ces images avec 60fps. On aurait probablement besoin de balise toutes les x secondes
+- 

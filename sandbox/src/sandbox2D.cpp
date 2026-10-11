@@ -76,21 +76,35 @@ void Sandbox2D::OnImGuiRender(){
     ImGui::ColorEdit4("square Color", glm::value_ptr(m_Color));
     ImGui::Separator();
     try {
-        if (!app.IsRecording()) {
-            if (ImGui::Button("Demarrer l'enregistrement")) {
-                scivibe::CapturedFrame frame;
-                if (app.GetWindow().CaptureFrame(frame)) {
-                    app.InitRecording(VIDEO_SANDBOX_PATH "capture.mp4", 60);
-                    app.StartRecording();
-                } else {
-                    SCIVIBE_ERROR("Impossible de capturer la fenetre");
-                }
+        if (app.IsRecording()) {
+            ImGui::TextUnformatted("Enregistrement en cours");
+
+            if (ImGui::Button("Stop")) {
+                app.StopRecording();
+            }
+        } else if (app.IsRecorderInitialized()) {
+            ImGui::TextUnformatted("Pret a enregistrer");
+
+            if (ImGui::Button("Start")) {
+                app.StartRecording();
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Annuler")) {
+                app.StopRecording();
             }
         } else {
-            ImGui::TextUnformatted("Enregistrement en cours");
-            if (ImGui::Button("Arreter l'enregistrement")) app.StopRecording();
-        }
-    } catch (const std::exception& error) {
+            ImGui::TextUnformatted("Enregistrement non initialise");
+
+            if (ImGui::Button("Init")) {
+                app.InitRecording(
+                    VIDEO_SANDBOX_PATH "capture.mp4",
+                    60
+                );
+            }
+        } 
+    }catch (const std::exception& error) {
         SCIVIBE_ERROR("Enregistrement : {}", error.what());
     }
     ImGui::End();

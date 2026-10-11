@@ -14,6 +14,7 @@ namespace scivibe{
             void StopRecording();
 
             bool IsRecording() const{ return m_IsRecording;};
+            bool IsInitialized() const{return m_IsInit;};
             bool AudioIsRecording() const{ return m_AudioIsRecording;};
             bool WindowIsRecording() const{ return m_WindowIsRecording;};
 
