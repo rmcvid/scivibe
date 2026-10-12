@@ -5,7 +5,7 @@ project(scivibe_engine LANGUAGES C CXX)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Keep dependencies local and reproducible through the existing submodules.
-foreach(dependency IN ITEMS glfw glm miniaudio spdlog)
+foreach(dependency IN ITEMS glfw glm miniaudio spdlog freetype)
     if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/${dependency}/CMakeLists.txt")
         message(FATAL_ERROR "Missing ${dependency}: run git submodule update --init --recursive")
     endif()
@@ -26,6 +26,21 @@ set(GLM_BUILD_INSTALL OFF CACHE BOOL "Install GLM")
 add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
 add_subdirectory(external/spdlog)
+
+# Keep FreeType self-contained and its build options local to this dependency.
+function(scivibe_add_freetype)
+    set(BUILD_SHARED_LIBS OFF)
+    set(BUILD_FRAMEWORK OFF)
+    set(SKIP_INSTALL_ALL ON)
+    # Use bundled zlib; optional compressed/color font dependencies can be added later.
+    set(FT_DISABLE_ZLIB ON)
+    set(FT_DISABLE_BZIP2 ON)
+    set(FT_DISABLE_PNG ON)
+    set(FT_DISABLE_HARFBUZZ ON)
+    set(FT_DISABLE_BROTLI ON)
+    add_subdirectory(external/freetype)
+endfunction()
+scivibe_add_freetype()
 
 find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
@@ -124,6 +139,7 @@ target_link_libraries(scivibe
         scivibe_stb_image
     PUBLIC
         FFmpeg::FFmpeg
+        freetype
         # Propagate headers, but keep the OBJECT files in the engine only.
         scivibe_imgui
         scivibe_glad

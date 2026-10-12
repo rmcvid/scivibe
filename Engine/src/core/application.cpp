@@ -44,7 +44,6 @@ namespace scivibe {
         s_Instance = this;
         m_window = Scope<Window>(Window::Create());
         m_window->SetEventCallback(BIND_EVENT_FN(onEvent));
-
         m_Recorder = Scope<Recorder>(new Recorder());
 
         Renderer::Init();

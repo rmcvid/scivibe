@@ -19,7 +19,8 @@ class Sandbox2D : public scivibe::Layer
         
         scivibe::Ref<scivibe::VertexArray> m_VertexArrayBlue;
         scivibe::Ref<scivibe::Shader> m_FlatColorShader;
-
+        // ici à bouger dans l'engine ?
+        scivibe::Ref<scivibe::Font> m_Font;
         scivibe::Ref<scivibe::Texture2D> m_TextureTest;
 
         glm::vec4 m_Color = {0.7f,0.7f,0.7f,1.0f};

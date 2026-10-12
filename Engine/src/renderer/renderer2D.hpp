@@ -1,7 +1,11 @@
 #pragma once
 
+#include "core/core.hpp"
 #include "renderer/camera.hpp"
 #include "renderer/texture.hpp"
+#include "pseudoLatex/font.hpp"
+#include <cstdint>
+#include <string_view>
 namespace scivibe{
     class SCIVIBE_API Renderer2D
     {
@@ -19,13 +23,15 @@ namespace scivibe{
 
 
             // primitive 
-            static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const float rotateAngle, const Ref<Texture2D>& texture,  const float textScale = 1.00f, const glm::vec4 tincColor = glm::vec4(1.0f));
-            static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const float rotateAngle, const Ref<Texture2D>& texture,  const float textScale = 1.00f, const glm::vec4 tincColor = glm::vec4(1.0f));
+            static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const float rotateAngle, const Ref<Texture2D>& texture, const glm::vec2& uvMin, const glm::vec2& uvMax, const float textScale = 1.00f, const glm::vec4 tintColor = glm::vec4(1.0f));
+            static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const float rotateAngle, const Ref<Texture2D>& texture, const float textScale = 1.00f, const glm::vec4 tincColor = glm::vec4(1.0f));
+            static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const float rotateAngle, const Ref<Texture2D>& texture, const float textScale = 1.00f, const glm::vec4 tincColor = glm::vec4(1.0f));
             static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const float rotateAngle, const glm::vec4& color);
             static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const float rotateAngle, const glm::vec4& color);
             static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
             static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
 
+            static void Write(std::u32string_view text,Font& font,const glm::vec3& position,float scale,const glm::vec4& color);
 
 
             // stats
@@ -39,11 +45,14 @@ namespace scivibe{
             static Statistics GetStats();
         private:
             static void FlushAndReset();
+            static float PrepareQuad(const Ref<Texture2D>& texture);
             struct QuadInfo {
                 glm::vec4 color{1.0f};
                 float textureIndex = 0.0f;
                 glm::vec4 tintColor{1.0f};
                 float scale = 1.0f;
+                glm::vec2 uvMin{0.0f, 0.0f};
+                glm::vec2 uvMax{1.0f, 1.0f};
             };
             static void RenderQuad(const QuadInfo& info,const glm::mat4& transform);
         };

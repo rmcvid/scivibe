@@ -2,6 +2,7 @@
 
 ## To do pour vendredi 9/10
 - gerer l'aliasing
+- introduire le bluring
 - Ajouter l'écriture et la gestion de police à le fentre
 - Introduire une interprétation latex pour le rendu de charactère
 - Introduire les objets de base :
@@ -11,7 +12,7 @@
   - Cercle et disques ( plutot passer par une texture sur un quad pour éviter un nombre très élevé de triangle ou alors définir un shader ? )
   - Batterie ( implémenter le blurring pour un effet de lumière, Passer par photoshop ? )
 - Ecrire la vidéo sur les vecteurs pour savoir quoi dessiner ?
-
+- wrapper l'introduction de mesh et d'objet
 # To do ( plus long terme)
 - ajouter un profiling pour identifier les bottles neck, notamment pour l'enregistrement vidéo et audio
 - Vérifier si les fonctions d'ImGui qui ne sont pas utilisées sont quand même exportées vers le client afin qu'il puisse les utiliser (sinon, faire un fichier `.def` ?)

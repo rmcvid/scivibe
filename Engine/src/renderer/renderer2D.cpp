@@ -2,6 +2,10 @@
 #include "renderer/vertexArray.hpp"
 #include "shader/shader.hpp"
 #include "renderCommand.hpp"
+#include <array>
+#include <cstring>
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace scivibe{
 
     struct QuadVertex{
@@ -117,6 +121,7 @@ namespace scivibe{
     }
     
     void Renderer2D::Flush(){
+        if (s_Data.QuadIndexCount == 0) return;
         for(uint32_t i =0; i<s_Data.TextureSlotIndex; ++i ){
             s_Data.TextureSlots[i]->Bind(i);
         }
@@ -136,40 +141,48 @@ namespace scivibe{
         Flush();
     }
 
+    float Renderer2D::PrepareQuad(const Ref<Texture2D>& texture){
+        if(s_Data.QuadIndexCount +6 > Renderer2DData::MaxIndices){
+            FlushAndReset();
+        }
+        if(!texture) return 0.0f;
+        for(uint32_t i=1; i<s_Data.TextureSlotIndex;++i){
+            if(*s_Data.TextureSlots[i] == *texture) return static_cast<float>(i);
+        }
+        if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots) FlushAndReset();
+        const uint32_t index = s_Data.TextureSlotIndex++;
+        s_Data.TextureSlots[index] = texture;
+        return static_cast<float>(index);
+    }
+    void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const float rotateAngle,
+        const Ref<Texture2D>& texture, const glm::vec2& uvMin, const glm::vec2& uvMax, const float textScale, const glm::vec4 tintColor){
+        constexpr glm::vec4 color {1.0f,1.0f,1.0f,1.0f};
+        const float textureIndex = PrepareQuad(texture);
+        /*if(textureIndex ==0.0f){
+            textureIndex = (float) s_Data.TextureSlotIndex;
+            s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;
+            s_Data.TextureSlotIndex++;
+        }*/
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f),position) * 
+            glm::rotate(glm::mat4(1.0f),rotateAngle,{0.0f,0.0f,1.0f})* 
+            glm::scale(glm::mat4(1.0f),{size.x,size.y,1.0f});
+        Renderer2D::QuadInfo info{ color, textureIndex, tintColor, textScale, uvMin, uvMax};
+        Renderer2D::RenderQuad(info, transform);
+    }
+
     /*permet de dessiner un carré avec une texture, 
     la rotation est assez lourde, on pourrait envisager de faire un drawrotatedquad rather*/
     void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size,  const float rotateAngle,
             const Ref<Texture2D>& texture ,const  float textScale, const glm::vec4 tintColor){
-
-        constexpr glm::vec4 color {1.0f,1.0f,1.0f,1.0f};
-        float textureIndex = 0.0f;
-
-        for(uint32_t i = 1; i<s_Data.TextureSlotIndex; ++i){
-            // ici faire un helper
-            if(*s_Data.TextureSlots[i].get() == *texture.get()){
-                textureIndex = (float) i;
-                break;
-            }
-        }
-        if(textureIndex ==0.0f){
-            textureIndex = (float) s_Data.TextureSlotIndex;
-            s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;
-            s_Data.TextureSlotIndex++;
-        }
-        glm::mat4 transform = glm::translate(glm::mat4(1.0f),position) * 
-            glm::rotate(glm::mat4(1.0f),rotateAngle,{0.0f,0.0f,1.0f})* 
-            glm::scale(glm::mat4(1.0f),{size.x,size.y,1.0f});
-        Renderer2D::QuadInfo info{ color, textureIndex, tintColor, textScale};
-        Renderer2D::RenderQuad(info, transform);
+                DrawQuad(position,size,rotateAngle,texture, {0.0f,0.0f},{1.0f,1.0f},textScale, tintColor);
     }
     /* permet de dessiner un carrée d'une certaine couleur*/
     void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size,  const float rotateAngle, const glm::vec4& color){
-        const float  textureIndex = 0.0f;
+        const float textureIndex = PrepareQuad(nullptr);
         /* il faudrait faire un helper et modifier les rotations si on veut vraiment améliorer les performances*/
         glm::mat4 transform = glm::translate(glm::mat4(1.0f),position) * 
             glm::rotate(glm::mat4(1.0f),rotateAngle,{0.0f,0.0f,1.0f})* 
             glm::scale(glm::mat4(1.0f),{size.x,size.y,1.0f});
-        
         Renderer2D::QuadInfo info{ color, textureIndex};
         Renderer2D::RenderQuad(info, transform);
     }
@@ -188,11 +201,10 @@ namespace scivibe{
     }
     
     void Renderer2D::RenderQuad(const QuadInfo &info, const glm::mat4 &transform){
-        if(s_Data.QuadIndexCount>= Renderer2DData::MaxIndices) Renderer2D::FlushAndReset();
-
+        //if(s_Data.QuadIndexCount>= Renderer2DData::MaxIndices) Renderer2D::FlushAndReset();
         s_Data.QuadVertexBufferPtr->Position =transform* s_Data.QuadVertexPositions[0];
         s_Data.QuadVertexBufferPtr->Color = info.color;
-        s_Data.QuadVertexBufferPtr->TexCoord = {0.0f,0.0f};
+        s_Data.QuadVertexBufferPtr->TexCoord = {info.uvMin.x, info.uvMin.y};
         s_Data.QuadVertexBufferPtr->TexIndex = info.textureIndex;
         s_Data.QuadVertexBufferPtr->TintColor = info.tintColor;
         s_Data.QuadVertexBufferPtr->Scale = info.scale;
@@ -200,7 +212,7 @@ namespace scivibe{
 
         s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[1];
         s_Data.QuadVertexBufferPtr->Color = info.color;
-        s_Data.QuadVertexBufferPtr->TexCoord = {1.0f,0.0f};
+        s_Data.QuadVertexBufferPtr->TexCoord = {info.uvMax.x, info.uvMin.y};
         s_Data.QuadVertexBufferPtr->TexIndex = info.textureIndex;
         s_Data.QuadVertexBufferPtr->TintColor = info.tintColor;
         s_Data.QuadVertexBufferPtr->Scale = info.scale;
@@ -208,7 +220,7 @@ namespace scivibe{
 
         s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[2];
         s_Data.QuadVertexBufferPtr->Color = info.color;
-        s_Data.QuadVertexBufferPtr->TexCoord = {1.0f,1.0f};
+        s_Data.QuadVertexBufferPtr->TexCoord = {info.uvMax.x, info.uvMax.y};
         s_Data.QuadVertexBufferPtr->TexIndex = info.textureIndex;
         s_Data.QuadVertexBufferPtr->TintColor = info.tintColor;
         s_Data.QuadVertexBufferPtr->Scale = info.scale;
@@ -216,7 +228,7 @@ namespace scivibe{
 
         s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[3];
         s_Data.QuadVertexBufferPtr->Color = info.color;
-        s_Data.QuadVertexBufferPtr->TexCoord = {0.0f,1.0f};
+        s_Data.QuadVertexBufferPtr->TexCoord = {info.uvMin.x, info.uvMax.y};
         s_Data.QuadVertexBufferPtr->TexIndex = info.textureIndex;
         s_Data.QuadVertexBufferPtr->TintColor = info.tintColor;
         s_Data.QuadVertexBufferPtr->Scale = info.scale;
@@ -231,4 +243,30 @@ namespace scivibe{
     Renderer2D::Statistics Renderer2D::GetStats(){
         return s_Data.Stats;
     }
+
+
+    void Renderer2D::Write(std::u32string_view text, Font& font, const glm::vec3& position,float scale = 1.0f, const glm::vec4& color = {1.0f,1.0f,1.0f,1.0f}){
+        glm::vec2 pen{position.x, position.y};
+        // ici passage à la ligne  mettre un helper et une condition
+        for (char32_t codepoint : text) {
+            if (codepoint == U'\n') {
+                pen.x = position.x;
+                pen.y -= font.GetLineHeight() * scale;
+                continue;
+            }
+            const Glyph& glyph = font.GetGlyph(codepoint);
+            const glm::vec2 size = glm::vec2(glyph.Size) * scale;
+            const glm::vec2 bottomLeft {
+                pen.x + glyph.Bearing.x*scale,
+                pen.y - (glyph.Size.y - glyph.Bearing.y) * scale
+            };
+
+            if(glyph.Size.x > 0 && glyph.Size.y > 0){
+                const glm::vec2 center = bottomLeft + size/2.0f;
+                DrawQuad(glm::vec3(center, position.z), size,0, font.GetAtlasTexture(),glyph.UVMin,glyph.UVMax, 1.0f, color);
+            }
+            pen.x += (glyph.Advance / 64.0f) * scale;
+        }
+    }
+
 }
