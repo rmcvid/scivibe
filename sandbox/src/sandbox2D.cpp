@@ -16,7 +16,12 @@ Sandbox2D::Sandbox2D()
 }
 void Sandbox2D::OnAttach(){
     m_TextureTest = scivibe::Texture2D::Create(IMAGE_SANDBOX_PATH "chess.png");
-    m_Font = scivibe::CreateRef<scivibe::Font>( FONT_SANDBOX_PATH "STIXTwoMath-Regular.ttf", 64 );
+    m_Font = scivibe::CreateRef<scivibe::Font>( FONT_SANDBOX_PATH "STIXTwoMath-Regular.ttf", 48 );
+    scivibe::LatexSettings settings;
+    settings.TextSize = 48.0f;
+    settings.RasterSize = 48;
+    settings.UnitsPerPixel = 0.005f;
+    scivibe::PseudoLatex::Init(settings);
     
 }
 void Sandbox2D::OnDetach(){
@@ -46,7 +51,8 @@ void Sandbox2D::OnUpdate(scivibe::Timestep ts ){
             scivibe::Renderer2D::DrawQuad({x,y}, {0.45f,0.45f},color);
         }
     }
-    scivibe::Renderer2D::Write( U"Bonjour !\nVoici mon texte. @ ù ~ α ", *m_Font, {-1.5f, 0.7f, 0.5f}, 0.0025f, {1.0f, 1.0f, 1.0f, 1.0f} );
+    //scivibe::Renderer2D::Write( U"Bonjour !\nVoici mon texte. @ ù ~ α ", *m_Font, {-1.5f, 0.7f, 0.5f}, 0.0025f, {1.0f, 1.0f, 1.0f, 1.0f} );
+    scivibe::PseudoLatex::Write( R"(\textcolor{blue}{\alpha}^{\gamma} + \infty = 3)", {-1.0f, 0.6f, 0.5f});
     scivibe::Renderer2D::EndScene();
 
 

@@ -2,12 +2,17 @@
     "configurations": [
         {
             "name": "CMake",
+            "compilerPath": "C:/msys64/ucrt64/bin/g++.exe",
+            "intelliSenseMode": "windows-gcc-x64",
+            "compileCommands": [
+                "${workspaceFolder}/build/compile_commands.json"
+            ],
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/Engine/src",
+                "${workspaceFolder}/sandbox/src"
             ],
             "cStandard": "c17",
-            "cppStandard": "c++17",
-            "configurationProvider": "ms-vscode.cmake-tools"
+            "cppStandard": "c++17"
         }
     ],
     "version": 4

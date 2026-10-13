@@ -38,6 +38,7 @@
 #include "renderer/orthographicCameraControler.hpp"
 #include "renderer/renderer2D.hpp"
 #include "pseudoLatex/font.hpp"
+#include "pseudoLatex/pseudoLatex.hpp"
 
 #include "input/input.hpp"
 

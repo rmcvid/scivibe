@@ -5,7 +5,7 @@ project(scivibe_engine LANGUAGES C CXX)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Keep dependencies local and reproducible through the existing submodules.
-foreach(dependency IN ITEMS glfw glm miniaudio spdlog freetype)
+foreach(dependency IN ITEMS glfw glm miniaudio spdlog freetype microtex tinyxml2)
     if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/${dependency}/CMakeLists.txt")
         message(FATAL_ERROR "Missing ${dependency}: run git submodule update --init --recursive")
     endif()
@@ -41,6 +41,7 @@ function(scivibe_add_freetype)
     add_subdirectory(external/freetype)
 endfunction()
 scivibe_add_freetype()
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/ScivibeMicroTeX.cmake")
 
 find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
@@ -126,7 +127,9 @@ endif()
 add_library(scivibe::engine ALIAS scivibe)
 target_compile_features(scivibe PUBLIC cxx_std_17)
 target_compile_definitions(scivibe
-    PRIVATE SCIVIBE_BUILD_DLL
+    PRIVATE
+        SCIVIBE_BUILD_DLL
+        "SCIVIBE_MICROTEX_RESOURCE_PATH=\"${SCIVIBE_MICROTEX_RESOURCE_DIR}\""
     PUBLIC GLFW_INCLUDE_NONE
     $<$<CONFIG:Debug>:SCIVIBE_ENABLE_ASSERT>
     # The trailing slash allows SHADER_PATH "shader.vs" in C++.
@@ -137,6 +140,7 @@ target_include_directories(scivibe PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(scivibe 
     PRIVATE
         scivibe_stb_image
+        MicroTeX::Core
     PUBLIC
         FFmpeg::FFmpeg
         freetype

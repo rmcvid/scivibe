@@ -12,14 +12,9 @@
 
 namespace scivibe{
     namespace {
-
         void CheckFreeType(FT_Error error, const char* operation) {
             if (error != 0) {
-                throw std::runtime_error(
-                    std::string(operation)
-                    + " : erreur FreeType "
-                    + std::to_string(error)
-                );
+                throw std::runtime_error(std::string(operation)+ " : erreur FreeType "+ std::to_string(error));
             }
         }
     }
