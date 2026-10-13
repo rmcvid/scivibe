@@ -22,3 +22,9 @@
 [submodule "Engine/external/freetype"]
 	path = Engine/external/freetype
 	url = https://github.com/freetype/freetype.git
+[submodule "Engine/external/microtex"]
+	path = Engine/external/microtex
+	url = https://github.com/NanoMichael/MicroTeX.git
+[submodule "Engine/external/tinyxml2"]
+	path = Engine/external/tinyxml2
+	url = https://github.com/leethomason/tinyxml2.git
