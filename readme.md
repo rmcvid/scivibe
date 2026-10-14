@@ -14,6 +14,7 @@
 - Ecrire la vidéo sur les vecteurs pour savoir quoi dessiner ?
 - wrapper l'introduction de mesh et d'objet
 # To do ( plus long terme)
+- Pour le moment les drawline ( meme dans pseudo latex) sont fait avec des quad, il serait plus judicieux d'utiliser des shader et d'introduire le même raisonement pour les cercles
 - ajouter un profiling pour identifier les bottles neck, notamment pour l'enregistrement vidéo et audio
 - Vérifier si les fonctions d'ImGui qui ne sont pas utilisées sont quand même exportées vers le client afin qu'il puisse les utiliser (sinon, faire un fichier `.def` ?)
 - Un README qui se respecte

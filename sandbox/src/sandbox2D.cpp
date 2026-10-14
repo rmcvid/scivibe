@@ -52,8 +52,12 @@ void Sandbox2D::OnUpdate(scivibe::Timestep ts ){
         }
     }
     //scivibe::Renderer2D::Write( U"Bonjour !\nVoici mon texte. @ ù ~ α ", *m_Font, {-1.5f, 0.7f, 0.5f}, 0.0025f, {1.0f, 1.0f, 1.0f, 1.0f} );
-    scivibe::PseudoLatex::Write( R"(\textcolor{blue}{\alpha}^{\gamma} + \infty = 3)", {-1.0f, 0.6f, 0.5f});
     scivibe::Renderer2D::EndScene();
+    scivibe::Renderer2D::BeginScene(m_CameraController.GetCamera());
+    scivibe::RenderCommand::SetDepthWrite(false);
+    scivibe::PseudoLatex::Write(R"(\frac{\sqrt{4}}{z}^{\gamma} \int_{x=0}^{\Pi} 5 dx + \infty = 3)", {-1.0f, 0.6f, 0.5f});
+    scivibe::Renderer2D::EndScene();
+    scivibe::RenderCommand::SetDepthWrite(true);
 
 
 }

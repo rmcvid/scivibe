@@ -4,12 +4,29 @@
             "name": "CMake",
             "compilerPath": "C:/msys64/ucrt64/bin/g++.exe",
             "intelliSenseMode": "windows-gcc-x64",
+            "configurationProvider": "ms-vscode.cmake-tools",
             "compileCommands": [
                 "${workspaceFolder}/build/compile_commands.json"
             ],
             "includePath": [
                 "${workspaceFolder}/Engine/src",
-                "${workspaceFolder}/sandbox/src"
+                "${workspaceFolder}/sandbox/src",
+                "${workspaceFolder}/Engine/external/glm",
+                "${workspaceFolder}/Engine/external/glad/include",
+                "${workspaceFolder}/Engine/external/glfw/include",
+                "${workspaceFolder}/Engine/external/imgui",
+                "${workspaceFolder}/Engine/external/imgui/backends",
+                "${workspaceFolder}/Engine/external/spdlog/include",
+                "${workspaceFolder}/Engine/external/stb",
+                "${workspaceFolder}/Engine/external/miniaudio",
+                "${workspaceFolder}/build/Engine/external/freetype/include",
+                "${workspaceFolder}/Engine/external/freetype/include",
+                "${workspaceFolder}/Engine/external/microtex/src",
+                "${workspaceFolder}/Engine/external/tinyxml2",
+                "${workspaceFolder}/build/Engine/ffmpeg/install/include"
+            ],
+            "defines": [
+                "GLFW_INCLUDE_NONE"
             ],
             "cStandard": "c17",
             "cppStandard": "c++17"

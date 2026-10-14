@@ -10,6 +10,9 @@ namespace scivibe {
     void OpenGLRendererAPI::SetClearColor(const glm::vec4& color){
         glClearColor(color.r,color.g,color.b,color.a);
     }
+    void OpenGLRendererAPI::SetDepthWrite(bool enabled) {
+        glDepthMask(enabled ? GL_TRUE : GL_FALSE);
+    }
     void OpenGLRendererAPI::Clear() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }

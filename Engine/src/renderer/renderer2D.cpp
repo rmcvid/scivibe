@@ -16,6 +16,7 @@ namespace scivibe{
         glm::vec4 TintColor;
         float Scale;
     };
+
     struct Renderer2DData{
         // per drawaquad
         static const uint32_t MaxQuads {1000};
@@ -154,19 +155,26 @@ namespace scivibe{
         s_Data.TextureSlots[index] = texture;
         return static_cast<float>(index);
     }
+    /* Permet de dessiner une texture avec des coordonnées de texture différent des 4 coins*/
     void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const float rotateAngle,
         const Ref<Texture2D>& texture, const glm::vec2& uvMin, const glm::vec2& uvMax, const float textScale, const glm::vec4 tintColor){
         constexpr glm::vec4 color {1.0f,1.0f,1.0f,1.0f};
         const float textureIndex = PrepareQuad(texture);
-        /*if(textureIndex ==0.0f){
-            textureIndex = (float) s_Data.TextureSlotIndex;
-            s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;
-            s_Data.TextureSlotIndex++;
-        }*/
         glm::mat4 transform = glm::translate(glm::mat4(1.0f),position) * 
             glm::rotate(glm::mat4(1.0f),rotateAngle,{0.0f,0.0f,1.0f})* 
             glm::scale(glm::mat4(1.0f),{size.x,size.y,1.0f});
         Renderer2D::QuadInfo info{ color, textureIndex, tintColor, textScale, uvMin, uvMax};
+        Renderer2D::RenderQuad(info, transform);
+    }
+     /* Permet de dessiner une texture avec des coordonnées de texture différent des 4 coins*/
+    void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const float rotateAngle,
+        const Ref<SubTexture2D>& subTexture, const float textScale, const glm::vec4 tintColor){
+        constexpr glm::vec4 color {1.0f,1.0f,1.0f,1.0f};
+        const float textureIndex = PrepareQuad(subTexture->GetTexture());
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f),position) * 
+            glm::rotate(glm::mat4(1.0f),rotateAngle,{0.0f,0.0f,1.0f})* 
+            glm::scale(glm::mat4(1.0f),{size.x,size.y,1.0f});
+        Renderer2D::QuadInfo info{color, textureIndex, tintColor, textScale, subTexture->GetUVMin(), subTexture->GetUVMax()};
         Renderer2D::RenderQuad(info, transform);
     }
 
@@ -186,6 +194,8 @@ namespace scivibe{
         Renderer2D::QuadInfo info{ color, textureIndex};
         Renderer2D::RenderQuad(info, transform);
     }
+
+
     void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size,  const float rotateAngle, const Ref<Texture2D>& texture,const  float textScale, const glm::vec4 tintColor ){
         DrawQuad({position.x,position.y,0.0f},size,rotateAngle,texture,textScale, tintColor);
     } 

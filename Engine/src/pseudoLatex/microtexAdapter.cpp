@@ -133,8 +133,30 @@ namespace scivibe{
                 Unsupported("drawText");
             }
 
-            void drawLine(float, float, float, float) override {
-                Unsupported("drawLine");
+            void drawLine(float x1, float y1, float x2, float y2) override {
+                const glm::vec2 start{x1,y1};
+                const glm::vec2 end{x2,y2};
+                const glm::vec2 delta = end - start;
+                const float length = glm::length(delta);
+                
+                const glm::vec2 worldScale = m_Scale*glm::vec2(m_UnitsPerPixel,- m_UnitsPerPixel);
+                const glm::vec2 worldStart = glm::vec2(m_Position) + m_Translation * glm::vec2(m_UnitsPerPixel, -m_UnitsPerPixel)
+                        + start * worldScale;
+                const glm::vec2 worldEnd = glm::vec2(m_Position) + m_Translation * glm::vec2(m_UnitsPerPixel, -m_UnitsPerPixel) +
+                        end * worldScale;
+                const glm::vec2 worldDelta = worldEnd - worldStart;
+                const float worldLength = glm::length(worldDelta);       
+                const glm::vec2 normal{-delta.y / length, delta.x / length};
+                const float thickness = m_Stroke.lineWidth * glm::length(normal * worldScale);
+                const glm::vec2 center = (worldStart + worldEnd) * 0.5f;
+                const float angle = std::atan2(worldDelta.y, worldDelta.x);
+                const glm::vec4 color{
+                    tex::color_r(m_Color) / 255.0f,
+                    tex::color_g(m_Color) / 255.0f,
+                    tex::color_b(m_Color) / 255.0f,
+                    tex::color_a(m_Color) / 255.0f
+                };
+                Renderer2D::DrawQuad(glm::vec3(center, m_Position.z),{worldLength, thickness},angle,color);
             }
 
             void drawRect(float, float, float, float) override {

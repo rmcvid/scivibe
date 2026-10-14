@@ -21,6 +21,13 @@ uniform vec3 textColor;
 
 void main()
 {    
-    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);
-    color = vec4(textColor, 1.0) * sampled;
+    vec4 sampledColor =
+        texture(uTexture[int(vTexIndex)], vTexCoord * vScale)
+        * vColor
+        * vTintColor;
+
+    if (sampledColor.a <= 0.0)
+        discard;
+
+    color = sampledColor;
 }
