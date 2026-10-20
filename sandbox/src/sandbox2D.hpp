@@ -22,6 +22,8 @@ class Sandbox2D : public scivibe::Layer
         // ici à bouger dans l'engine ?
         scivibe::Ref<scivibe::Font> m_Font;
         scivibe::Ref<scivibe::Texture2D> m_TextureTest;
+        scivibe::PsFile m_PsFile;
+        glm::vec2 m_ViewPortSize = {0,0}; 
 
         glm::vec4 m_Color = {0.7f,0.7f,0.7f,1.0f};
 

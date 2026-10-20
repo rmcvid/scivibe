@@ -115,6 +115,7 @@ namespace scivibe{
     class SCIVIBE_API IndexBuffer{
         public:
         virtual ~IndexBuffer(){}
+        virtual void SetData(const uint32_t* indices, uint32_t count) = 0;
         virtual void Bind() const =0;
         virtual void UnBind() const =0;
         virtual uint32_t GetCount() const = 0;

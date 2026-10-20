@@ -26,6 +26,7 @@ namespace scivibe{
         public:
             OpenGLIndexBuffer(uint32_t* indices, uint32_t count);
             ~OpenGLIndexBuffer() override;
+            virtual void SetData(const uint32_t* indices, uint32_t count);
             virtual void Bind() const;
             virtual void UnBind() const;
             virtual uint32_t GetCount() const{return m_Count;}

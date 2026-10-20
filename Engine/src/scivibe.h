@@ -37,8 +37,11 @@
 #include "renderer/camera.hpp"
 #include "renderer/orthographicCameraControler.hpp"
 #include "renderer/renderer2D.hpp"
+#include "renderer/frameBuffer.hpp"
+
 #include "pseudoLatex/font.hpp"
 #include "pseudoLatex/pseudoLatex.hpp"
+#include "pseudoLatex/psFile.hpp"
 
 #include "input/input.hpp"
 

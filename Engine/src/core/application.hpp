@@ -12,13 +12,15 @@
 #include "renderer/camera.hpp"
 #include "media/recorder.hpp"
 #include "constants/constant.hpp"
+#include "renderer/frameBuffer.hpp"
 namespace scivibe {
     class SCIVIBE_API Application {
     public:
         
-        Application();
+        Application(const std::string& name = "Scivibe");
         virtual ~Application();
 
+        void Close();
         void Run();
         void onEvent(Event& e);
 
@@ -40,7 +42,8 @@ namespace scivibe {
         void SetTargetFPS(int fps) { s_FrameRateData.TargetFPS = fps > 0 ? fps : 0; }
         int GetFPS() const { return s_FrameRateData.FPS; }
         double GetAverageFrameMilliseconds() const { return s_FrameRateData.AverageFrameMilliseconds; }
-        
+        Ref<FrameBuffer> GetFrameBuffer()const {return m_FrameBuffer;}
+
     private :
         bool OnWindowClose(WindowCloseEvent& e);
         bool OnWindowResize(WindowResizeEvent& e);
@@ -50,6 +53,7 @@ namespace scivibe {
         ImGuiLayer* m_ImGuiLayer;
         Scope<Window> m_window;
         Scope<Recorder> m_Recorder;
+        Ref<FrameBuffer> m_FrameBuffer;
         
         bool m_Running = true;
         bool m_Minimized = false;

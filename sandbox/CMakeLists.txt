@@ -12,7 +12,7 @@ file(GLOB_RECURSE SANDBOX_SHADERS CONFIGURE_DEPENDS
 if(SANDBOX_SHADERS)
     set_source_files_properties(${SANDBOX_SHADERS} PROPERTIES HEADER_FILE_ONLY TRUE)
 endif()
-scivibe_add_executable(sandbox test.cpp ${SANDBOX_SOURCES} ${SANDBOX_SHADERS})
+scivibe_add_executable(sandbox EditorLayer.cpp ${SANDBOX_SOURCES} ${SANDBOX_SHADERS})
 target_include_directories(sandbox PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 target_compile_definitions(sandbox PRIVATE
@@ -20,6 +20,7 @@ target_compile_definitions(sandbox PRIVATE
     "SHADER_SANDBOX_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/src/\""
     "VIDEO_SANDBOX_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/video/\""
     "FONT_SANDBOX_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/fonts/\""
+    "TEXT_SANDBOX_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/text/\""
 )
 
 # Keep a separate PCH: the sandbox imports the DLL, while the engine exports it.

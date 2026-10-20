@@ -11,11 +11,9 @@
 namespace scivibe{
     ImGuiLayer::ImGuiLayer()
         : Layer("ImGuiLayer"){
-
     }
 
     ImGuiLayer::~ImGuiLayer(){
-
     }
 
     void ImGuiLayer::OnAttach()
@@ -46,6 +44,9 @@ namespace scivibe{
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
     }
+    void ImGuiLayer::OnEvent(Event &e){
+        
+    }
 
     void ImGuiLayer::Begin(){
         ImGui_ImplOpenGL3_NewFrame();
@@ -68,8 +69,6 @@ namespace scivibe{
         }
     }
     void ImGuiLayer::OnImGuiRender(){
-        static bool show = true;
-        ImGui::ShowDemoWindow(&show);
     }
 
 }

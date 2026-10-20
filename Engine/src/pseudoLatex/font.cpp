@@ -33,8 +33,8 @@ namespace scivibe{
         // ici à vérifier
         m_LineHeight = static_cast<float>(face->size->metrics.height) / 64.0f;
 
-        constexpr uint32_t atlasWidth = 1024;
-        constexpr uint32_t atlasHeight = 1024;
+        constexpr uint32_t atlasWidth = 2048;
+        constexpr uint32_t atlasHeight = 2048;
         constexpr uint32_t padding = 1;
 
         std::vector<uint8_t> pixels(static_cast<std::size_t>(atlasWidth) * atlasHeight * 4,255);
@@ -47,10 +47,8 @@ namespace scivibe{
         for(char32_t codepoint = 32; codepoint <= 255; ++codepoint){
             if(codepoint >=127 && codepoint <160) continue;
             if(FT_Get_Char_Index(face.get(), codepoint) == 0) continue;
-            CheckFreeType(
-                FT_Load_Char(face.get(),codepoint,FT_LOAD_RENDER | FT_LOAD_TARGET_NORMAL | FT_LOAD_NO_BITMAP),"FT_Load_Char"
-            );
-            
+            CheckFreeType(FT_Load_Char(face.get(),codepoint,FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING),"FT_Load_Char");
+            CheckFreeType(FT_Render_Glyph(face->glyph, FT_RENDER_MODE_SDF),"FT_Render_Glyph SDF");
             const FT_GlyphSlot slot = face->glyph;
             const FT_Bitmap& bitmap = slot->bitmap;
 
@@ -68,10 +66,9 @@ namespace scivibe{
             };
             glyph.Advance = static_cast<int32_t>(slot->advance.x);
             if (width > 0 && height > 0) {
-                if (bitmap.pixel_mode != FT_PIXEL_MODE_GRAY
-                    || bitmap.num_grays != 256) {
+                if (bitmap.pixel_mode != FT_PIXEL_MODE_GRAY) {
                     throw std::runtime_error(
-                        "Cette version attend un bitmap en niveaux de gris"
+                        "Le rendu SDF attend un bitmap mono-canal 8 bits"
                     );
                 }
                 if (width + 2 * padding > atlasWidth

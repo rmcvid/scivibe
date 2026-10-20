@@ -15,9 +15,9 @@ namespace scivibe{
     struct LatexSettings {
         std::string ResourceDirectory;
         int MaxWidth = 800;
-        float TextSize = 48.0f;
+        float TextSize = 124.0f;
         float LineSpacing = 10.0f;
-        uint32_t RasterSize = 48;
+        uint32_t RasterSize = 128;
         float UnitsPerPixel = 0.005f;
     };
 
@@ -38,6 +38,7 @@ namespace scivibe{
             static Ref<LatexFormula> Create(std::string_view source);
             static void Write(const LatexFormula& formula,const glm::vec3& position);
             static void Write(std::string_view source,const glm::vec3& position);
+            static void WriteFromFile(std::string filePath, const glm::vec3& position);
       
     };
 

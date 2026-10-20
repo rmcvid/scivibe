@@ -21,6 +21,7 @@ namespace scivibe{
             void OnAttach() override ;
             void OnDetach() override;
             void OnImGuiRender() override ;
+            void OnEvent(Event& e);
             void Begin();
             void End();
         private:

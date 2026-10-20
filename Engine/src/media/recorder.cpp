@@ -1,5 +1,6 @@
 #include "media/recorder.hpp"
 #include "core/timeStep.hpp"
+#include "core/log.hpp"
 // ici à suprimer
 #include <filesystem>
 namespace scivibe{
@@ -45,10 +46,11 @@ namespace scivibe{
     void Recorder::SubmitFrame(const CapturedFrame& frame){
         if (!IsRecording())
         return;
-
-        if (frame.Width <= 0 || frame.Height <= 0 ||frame.StrideBytes <= 0 || frame.Pixels.empty())
+        if (frame.Width <= 0 || frame.Height <= 0 ||frame.StrideBytes <= 0 || frame.Pixels.empty()){
+            SCIVIBE_CORE_INFO("le buffer de pixel est vide" );
+            StopRecording();
             return;
-
+        }
         if (frame.Width != GetWidth() || frame.Height != GetHeight()) {
             StopRecording();
             return;

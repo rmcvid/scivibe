@@ -3,16 +3,13 @@
 ## To do pour vendredi 9/10
 - gerer l'aliasing
 - introduire le bluring
-- Ajouter l'écriture et la gestion de police à le fentre
-- Introduire une interprétation latex pour le rendu de charactère
 - Introduire les objets de base :
-  - Vecteurs ( flèches)
   - lignes => Repère ( carthésien, polaire, ...) 
   - wrapper de courbe à travers des fonctions
   - Cercle et disques ( plutot passer par une texture sur un quad pour éviter un nombre très élevé de triangle ou alors définir un shader ? )
   - Batterie ( implémenter le blurring pour un effet de lumière, Passer par photoshop ? )
 - Ecrire la vidéo sur les vecteurs pour savoir quoi dessiner ?
-- wrapper l'introduction de mesh et d'objet
+- wrapper l'introduction de mesh et d'objet, ca c'est à faire aussi!
 # To do ( plus long terme)
 - Pour le moment les drawline ( meme dans pseudo latex) sont fait avec des quad, il serait plus judicieux d'utiliser des shader et d'introduire le même raisonement pour les cercles
 - ajouter un profiling pour identifier les bottles neck, notamment pour l'enregistrement vidéo et audio
@@ -28,6 +25,9 @@
 - implémenter ffmpeg
 - implémented miniaudio
 - Batching 2D
+- Ajouter l'écriture et la gestion de police à le fentre
+- Introduire une interprétation latex pour le rendu de charactère
+- Vecteurs ( flèches)
   
 ## Probleme superposition audio vidéo:
 Un des problemes qu'on a pendant l'enregistrement est qu'une perte de perfomance momentanée introduit un décalage entre l'audio et l'image qui se cumule. Pour éviter ce problème il existe plusieures posibilitées :

@@ -4,7 +4,6 @@
 #include "Events/applicationEvent.hpp"
 #include "pch/pch.hpp"
 #include "GLFW/glfw3.h"
-#include "window/windowInput.hpp"
 #include "gui/imGuiLayer.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/renderer2D.hpp"
@@ -37,14 +36,17 @@ namespace scivibe {
     }
 
 
-    Application::Application()
-    {
+    Application::Application(const std::string& name){
         SCIVIBE_CORE_ASSERT(!s_Instance, "Application already exist")
 
         s_Instance = this;
-        m_window = Scope<Window>(Window::Create());
+        m_window = Scope<Window>(Window::Create(WindowProps(name)));
         m_window->SetEventCallback(BIND_EVENT_FN(onEvent));
         m_Recorder = Scope<Recorder>(new Recorder());
+        FrameBufferSpecification fbSpec;
+        fbSpec.Width  = 1280;
+        fbSpec.Height = 720;
+        m_FrameBuffer = scivibe::FrameBuffer::Create(fbSpec);
 
         Renderer::Init();
         m_ImGuiLayer = new ImGuiLayer();
@@ -83,7 +85,8 @@ namespace scivibe {
         }
     }
     void Application::InitRecording(const std::string& filename, int fps){
-        m_Recorder->Init(filename,m_window->GetWidth(),m_window->GetHeight(),fps);
+        //m_Recorder->Init(filename,m_window->GetWidth(),m_window->GetHeight(),fps);
+        m_Recorder->Init(filename,m_FrameBuffer->GetSpecification().Width,m_FrameBuffer->GetSpecification().Height,fps);
     }
     void Application::StartRecording(){
         m_Recorder->StartRecording();
@@ -93,11 +96,14 @@ namespace scivibe {
     }
 
     void Application::RecordFrame() {
-    if (m_window->CaptureFrame(m_CapturedFrame)) {
-        m_Recorder->SubmitFrame(m_CapturedFrame);
+        if (m_window->CaptureFrame(m_CapturedFrame,m_FrameBuffer)) {
+            m_Recorder->SubmitFrame(m_CapturedFrame);
+        }
     }
-}
 
+    void Application::Close(){
+        m_Running = false;
+    }
     void Application::Run(){
         while (m_Running) {
             const double time = Timestep::GetTime();

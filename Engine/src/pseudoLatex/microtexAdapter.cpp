@@ -1,8 +1,10 @@
 #include "pseudoLatex/microtexAdapter.hpp"
 #include "pseudoLatex/font.hpp"
 #include "renderer/renderer2D.hpp"
+#include "core/log.hpp"
 
 #include <latex.h>
+#include <fonts/fonts.h>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -11,7 +13,7 @@
 
 namespace scivibe{
     namespace {
-        uint32_t s_RasterSize = 48;
+        uint32_t s_RasterSize = 96;
     }
     [[noreturn]] void Unsupported(const char* operation){
         throw std::runtime_error(std::string("Adaptateur Microtex : ") + operation + "non implemente");
@@ -59,6 +61,35 @@ namespace scivibe{
             uint32_t m_RasterSize;
             mutable Ref<scivibe::Font> m_RasterFont;
     };
+
+    void PreloadMicroTeXFonts(){
+        SCIVIBE_CORE_INFO("Debut de chargement des polices");
+        const char* names[] = {
+            "cmr10",               // Lettres et chiffres
+            "cmmi10",              // Lettres mathématiques
+            "cmmi10_unchanged",     // Grec, vecteurs, symboles
+            "cmsy10",              // Symboles mathématiques
+            //"cmbx10",              // Texte gras
+            //"cmmib10",             // Mathématiques en gras
+            //"cmmib10_unchanged",
+            //"cmbsy10",             // Symboles gras
+            //"cmti10",              // Texte italique
+            //"cmti10_unchanged",
+            //"msam10",              // Symboles AMS
+            //"msbm10"               // Symboles AMS et ensembles
+            "cmex10"              // Intégrales, sommes, grands délimiteurs
+        };
+        for (const char* name : names) {
+            const int id = tex::FontInfo::__id(name);
+            if (id < 0) 
+                throw std::runtime_error( std::string("Police MicroTeX inconnue : ") + name );
+
+            const auto* font = dynamic_cast<const MicroTeXFont*>( tex::FontInfo::__get(id)->getFont());
+            if (!font)throw std::logic_error("Police MicroTeX incompatible");
+            font->GetRasterFont();
+        }
+        SCIVIBE_CORE_INFO("Fin de chargement des polices");
+    }
 
     class MicroTeXGraphics final : public tex::Graphics2D {
         public:
@@ -118,7 +149,8 @@ namespace scivibe{
                     tex::color_a(m_Color) / 255.0f
                 };
 
-                Renderer2D::DrawQuad(center,size,0.0f,rasterFont.GetAtlasTexture(),glyph.UVMin,glyph.UVMax,1.0f,color);
+                Renderer2D::DrawGlyphSDF(center,size,0.0f,rasterFont.GetAtlasTexture(),glyph.UVMin,glyph.UVMax,1.0f,color);
+                
             }
 
             void rotate(float) override {

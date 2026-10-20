@@ -13,6 +13,9 @@ namespace scivibe{
     bool WindowsWindow::CaptureFrame(CapturedFrame& frame) {
         return m_Context->CaptureFrame(frame);
     }
+    bool WindowsWindow::CaptureFrame(CapturedFrame& frame, Ref<FrameBuffer> fb) {
+        return m_Context->CaptureFrame(frame,fb);
+    }
 
     WindowsWindow::WindowsWindow(const WindowProps& props){
         Init(props);
@@ -35,10 +38,11 @@ namespace scivibe{
             glfwSetErrorCallback(GLFWErrorCallback);
             s_GLFWInitialized = true;
         }
-        
+        glfwWindowHint(GLFW_SAMPLES, 4);
         m_Window = glfwCreateWindow((int)props.Width,(int)props.Heigth, m_Data.Title.c_str(),nullptr,nullptr);
         m_Context = new OpenGLContext(m_Window);
         m_Context->Init(); 
+        glEnable(GL_MULTISAMPLE);  
         
         glfwSetWindowUserPointer(m_Window, &m_Data);
         SetVSync(true);

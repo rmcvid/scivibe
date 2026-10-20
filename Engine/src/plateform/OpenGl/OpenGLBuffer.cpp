@@ -48,6 +48,13 @@ namespace scivibe
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
     }
+    void OpenGLIndexBuffer::SetData(const uint32_t* indices, uint32_t count){
+        if (count == 0) return;
+        if (indices == nullptr) throw std::invalid_argument("IndexBuffer : indices null");
+        if (count > m_Count) throw std::out_of_range("IndexBuffer : capacite depassee");
+        Bind();
+        glBufferSubData(GL_ELEMENT_ARRAY_BUFFER,0,static_cast<GLsizeiptr>(count) * sizeof(uint32_t),indices);
+    }
     OpenGLIndexBuffer::~OpenGLIndexBuffer()
     {
         glDeleteBuffers(1, &m_RendererID);

@@ -26,6 +26,7 @@ namespace scivibe {
         void SwapBuffers() override;
         void WaitEvents(double timeout) override;
         bool CaptureFrame(CapturedFrame& frame) override;
+        bool CaptureFrame(CapturedFrame& frame, Ref<FrameBuffer> fb) override;
 
         inline unsigned int GetWidth() const override {return m_Data.Width;}
         inline unsigned int GetHeight() const override {return m_Data.Height;}

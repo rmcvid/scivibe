@@ -25,6 +25,7 @@ namespace scivibe{
         glfwSwapBuffers(m_windowHandle);   
     }
     bool OpenGLContext::CaptureFrame(CapturedFrame& frame){
+        /* capture l'image affiché par la fenetre*/
     glfwGetFramebufferSize(m_windowHandle,&frame.Width,&frame.Height);
     if (frame.Width <= 0 || frame.Height <= 0)
         return false;
@@ -39,5 +40,46 @@ namespace scivibe{
         return false;
     }
     return true;
-}
+    }
+
+    
+    bool OpenGLContext::CaptureFrame(CapturedFrame& frame, Ref<FrameBuffer> fb){
+        /* capture le framebuffer qui peut être le viewport*/
+        if (!fb) return false;
+        const auto& spec = fb->GetSpecification();
+        frame.Width = static_cast<int>(spec.Width);
+        frame.Height = static_cast<int>(spec.Height);
+        if (frame.Width <= 0 || frame.Height <= 0)
+            return false;
+        constexpr int channels = 4;
+        frame.StrideBytes = frame.Width * channels;
+        frame.Pixels.resize(static_cast<size_t>(frame.StrideBytes) *static_cast<size_t>(frame.Height));
+        GLint previousReadFramebuffer = 0;
+        GLint previousReadBuffer = 0;
+        GLint previousPackAlignment = 0;
+        GLint previousDrawFramebuffer = 0;
+        glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &previousReadFramebuffer);
+        glGetIntegerv(GL_READ_BUFFER, &previousReadBuffer);
+        glGetIntegerv(GL_PACK_ALIGNMENT, &previousPackAlignment);
+        glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &previousDrawFramebuffer);
+
+        fb->BindRead();
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        glReadPixels(0, 0,frame.Width,frame.Height,GL_RGBA,GL_UNSIGNED_BYTE,frame.Pixels.data());
+        GLenum error = glGetError();
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, previousReadFramebuffer);
+        glReadBuffer(previousReadBuffer);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, previousDrawFramebuffer);
+        glPixelStorei(GL_PACK_ALIGNMENT, previousPackAlignment);
+
+        if (error != GL_NO_ERROR){
+            SCIVIBE_CORE_ERROR("OpenGL CaptureFrame failed: {0}", error);
+            return false;
+        }
+
+        return true;
+    }
+
+    
 }
