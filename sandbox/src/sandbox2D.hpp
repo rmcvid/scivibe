@@ -1,6 +1,6 @@
 #pragma once
 #include "scivibe.h"
-
+#include <optional>
 class Sandbox2D : public scivibe::Layer
 {
     public:
@@ -22,8 +22,15 @@ class Sandbox2D : public scivibe::Layer
         // ici à bouger dans l'engine ?
         scivibe::Ref<scivibe::Font> m_Font;
         scivibe::Ref<scivibe::Texture2D> m_TextureTest;
+
+        scivibe::CurvePath m_CurvePath;
+        scivibe::CurveStyle m_CurveStyle;
+
         scivibe::PsFile m_PsFile;
-        glm::vec2 m_ViewPortSize = {0,0}; 
+        glm::vec2 m_ViewPortSize = {0,0};
+        scivibe::Line m_Line;
+
+        std::optional<scivibe::Animator> m_LineAnimation;
 
         glm::vec4 m_Color = {0.7f,0.7f,0.7f,1.0f};
 

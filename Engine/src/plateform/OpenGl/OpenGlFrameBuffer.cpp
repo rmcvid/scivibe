@@ -75,6 +75,7 @@ namespace scivibe{
 }
     void OpenGLFrameBuffer::Bind(){
         glBindFramebuffer(GL_FRAMEBUFFER,m_RendererID);
+        glViewport(0, 0, m_Spec.Width, m_Spec.Height);
     }
 #if 0
     void OpenGLFrameBuffer::Unbind(){

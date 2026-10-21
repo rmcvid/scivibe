@@ -129,6 +129,7 @@ target_compile_features(scivibe PUBLIC cxx_std_17)
 target_compile_definitions(scivibe
     PRIVATE
         SCIVIBE_BUILD_DLL
+        "SCIVIBE_FONT_CACHE_PATH=\"${CMAKE_SOURCE_DIR}/.cache/fonts\""
         "SCIVIBE_MICROTEX_RESOURCE_PATH=\"${SCIVIBE_MICROTEX_RESOURCE_DIR}\""
     PUBLIC GLFW_INCLUDE_NONE
     $<$<CONFIG:Debug>:SCIVIBE_ENABLE_ASSERT>

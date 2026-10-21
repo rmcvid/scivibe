@@ -1,5 +1,6 @@
 #pragma once
 #include "pch/pch.hpp"
+#include <glm/glm.hpp>
 namespace scivibe{
     class SCIVIBE_API Texture{
         public:

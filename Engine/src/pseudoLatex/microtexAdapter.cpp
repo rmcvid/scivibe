@@ -13,7 +13,7 @@
 
 namespace scivibe{
     namespace {
-        uint32_t s_RasterSize = 96;
+        uint32_t s_RasterSize = 112;
     }
     [[noreturn]] void Unsupported(const char* operation){
         throw std::runtime_error(std::string("Adaptateur Microtex : ") + operation + "non implemente");

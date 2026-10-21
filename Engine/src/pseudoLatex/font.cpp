@@ -1,4 +1,6 @@
 #include "pseudoLatex/font.hpp"
+#include "pseudoLatex/fontAtlasCache.hpp"
+#include "core/log.hpp"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -25,6 +27,39 @@ namespace scivibe{
         FT_Library rawLibrary = nullptr;
         CheckFreeType(FT_Init_FreeType(&rawLibrary),"FT_Init_FreeType");
         std::unique_ptr<std::remove_pointer_t<FT_Library>, decltype(&FT_Done_FreeType)> library(rawLibrary, &FT_Done_FreeType);
+
+        constexpr uint32_t atlasWidth = fontcache::AtlasWidth;
+        constexpr uint32_t atlasHeight = fontcache::AtlasHeight;
+        constexpr uint32_t padding = fontcache::Padding;
+        constexpr FT_Int32 loadFlags = FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING;
+        std::vector<uint8_t> pixels;
+        auto uploadAtlas = [&] {
+            m_AtlasTexture = Texture2D::Create(atlasWidth, atlasHeight);
+            if (!m_AtlasTexture) throw std::runtime_error("Impossible de creer la texture de la police");
+            m_AtlasTexture->SetData(pixels.data(), static_cast<uint32_t>(pixels.size()));
+        };
+
+        std::optional<fontcache::Key> cacheKey;
+        bool cached = false;
+        try {
+            FT_Int major, minor, patch;
+            FT_Library_Version(library.get(), &major, &minor, &patch);
+            const std::string rasterizer = std::to_string(major) + "." +
+                std::to_string(minor) + "." + std::to_string(patch) + ":" +
+                std::to_string(loadFlags) + ":" + std::to_string(FT_RENDER_MODE_SDF);
+            cacheKey = fontcache::MakeKey(filepath, pixelSize, rasterizer);
+            cached = cacheKey && fontcache::Load(*cacheKey, m_GlyphCache, m_LineHeight, pixels);
+        } catch (const std::exception&) {
+            // Cache I/O is optional: keep normal font generation available.
+            cacheKey.reset();
+        }
+        if (cached) {
+            uploadAtlas();
+            if (Log::GetCoreLogger())
+                SCIVIBE_CORE_INFO("Atlas SDF charge depuis le cache : {} ({} px)", filepath, pixelSize);
+            return;
+        }
+
         FT_Face rawFace = nullptr;
         CheckFreeType(FT_New_Face(library.get(), filepath.c_str(), 0, &rawFace),"FT_New_Face");
         std::unique_ptr<std::remove_pointer_t<FT_Face>,decltype(&FT_Done_Face)> face(rawFace, &FT_Done_Face);
@@ -33,21 +68,17 @@ namespace scivibe{
         // ici à vérifier
         m_LineHeight = static_cast<float>(face->size->metrics.height) / 64.0f;
 
-        constexpr uint32_t atlasWidth = 2048;
-        constexpr uint32_t atlasHeight = 2048;
-        constexpr uint32_t padding = 1;
-
-        std::vector<uint8_t> pixels(static_cast<std::size_t>(atlasWidth) * atlasHeight * 4,255);
+        pixels.assign(static_cast<std::size_t>(atlasWidth) * atlasHeight * 4,255);
         for (std::size_t i = 3; i < pixels.size(); i += 4) {pixels[i] = 0;}
 
         uint32_t cursorX = padding;
         uint32_t cursorY = padding;
         uint32_t rowHeight = 0;
 
-        for(char32_t codepoint = 32; codepoint <= 255; ++codepoint){
+        for(char32_t codepoint = fontcache::FirstCodepoint; codepoint <= fontcache::LastCodepoint; ++codepoint){
             if(codepoint >=127 && codepoint <160) continue;
             if(FT_Get_Char_Index(face.get(), codepoint) == 0) continue;
-            CheckFreeType(FT_Load_Char(face.get(),codepoint,FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING),"FT_Load_Char");
+            CheckFreeType(FT_Load_Char(face.get(),codepoint,loadFlags),"FT_Load_Char");
             CheckFreeType(FT_Render_Glyph(face->glyph, FT_RENDER_MODE_SDF),"FT_Render_Glyph SDF");
             const FT_GlyphSlot slot = face->glyph;
             const FT_Bitmap& bitmap = slot->bitmap;
@@ -123,9 +154,19 @@ namespace scivibe{
 
         if (m_GlyphCache.find(U'?') == m_GlyphCache.end()) 
             throw std::runtime_error( "La police ne contient pas le caractere de remplacement '?'" );
-        m_AtlasTexture = Texture2D::Create(atlasWidth, atlasHeight);
-        if (!m_AtlasTexture) throw std::runtime_error( "Impossible de creer la texture de la police" );
-        m_AtlasTexture->SetData( pixels.data(),static_cast<uint32_t>(pixels.size()) );
+        uploadAtlas();
+        bool saved = false;
+        try {
+            saved = cacheKey && fontcache::Save(*cacheKey, m_GlyphCache, m_LineHeight, pixels);
+        } catch (const std::exception&) {
+            // A read-only/full cache directory must not prevent text rendering.
+        }
+        if (Log::GetCoreLogger()) {
+            if (saved)
+                SCIVIBE_CORE_INFO("Atlas SDF genere et mis en cache : {} ({} px)", filepath, pixelSize);
+            else
+                SCIVIBE_CORE_WARN("Atlas SDF genere sans cache disque : {} ({} px)", filepath, pixelSize);
+        }
     }
     Font::~Font() = default;
 

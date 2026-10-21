@@ -7,6 +7,8 @@
 #include <cmath>
 #include <memory>
 #include <glm/gtc/matrix_transform.hpp>
+#include "renderer/rendererCurve2D.hpp"
+#include "core/application.hpp"
 
 namespace scivibe{
 
@@ -100,6 +102,8 @@ namespace scivibe{
     
     void Renderer2D::BeginScene(const OrthographicCamera& camera){
         ResetData();
+        const auto& spec = Application::Get().GetFrameBuffer()->GetSpecification();
+        RendererCurve2D::SetView(camera.GetViewProjectionMatrix(),glm::uvec2{spec.Width, spec.Height});
         s_Data.TextureShader->Bind();
         s_Data.TextureShader->SetMat4("uViewProjection",camera.GetViewProjectionMatrix());
         s_Data.TextShader->Bind();

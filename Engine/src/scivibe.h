@@ -10,7 +10,6 @@
 #include <miniaudio.h>
 
 #include "objet/color.hpp"
-#include "objet/fleche.hpp"
 #include "core/log.hpp"
 #include "shader/shader.hpp"
 
@@ -38,10 +37,17 @@
 #include "renderer/orthographicCameraControler.hpp"
 #include "renderer/renderer2D.hpp"
 #include "renderer/frameBuffer.hpp"
+#include "renderer/rendererCurve2D.hpp"
+
+#include "objet/color.hpp"
+#include "objet/objet2D.hpp"
+#include "objet/line.hpp"
 
 #include "pseudoLatex/font.hpp"
 #include "pseudoLatex/pseudoLatex.hpp"
 #include "pseudoLatex/psFile.hpp"
+
+#include "animator/animator.hpp"
 
 #include "input/input.hpp"
 

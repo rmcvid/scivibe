@@ -40,10 +40,11 @@ namespace scivibe {
         SCIVIBE_CORE_ASSERT(!s_Instance, "Application already exist")
 
         s_Instance = this;
-        m_window = Scope<Window>(Window::Create(WindowProps(name)));
+        m_window = Scope<Window>(Window::Create(WindowProps(name, 1600, 900)));
         m_window->SetEventCallback(BIND_EVENT_FN(onEvent));
         m_Recorder = Scope<Recorder>(new Recorder());
         FrameBufferSpecification fbSpec;
+        // Fixed scene/video resolution, independent of the editor window size.
         fbSpec.Width  = 1280;
         fbSpec.Height = 720;
         m_FrameBuffer = scivibe::FrameBuffer::Create(fbSpec);
