@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.28)
 project(scivibe LANGUAGES C CXX)
 
 # Let IntelliSense use the same per-file include paths and defines as the build.

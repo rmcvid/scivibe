@@ -39,6 +39,7 @@ namespace scivibe {
         virtual int GetCategoryFlags() const = 0;
         virtual std::string ToString() const { return GetName(); }
         bool GetHandled() const {return m_Handled;}
+        void SetHandled(bool handled){m_Handled = handled;}
         inline bool IsInCategory(EventCategory category) {
             return GetCategoryFlags() & category;
         }

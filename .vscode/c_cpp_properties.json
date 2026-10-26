@@ -12,6 +12,7 @@
                 "${workspaceFolder}/Engine/src",
                 "${workspaceFolder}/sandbox/src",
                 "${workspaceFolder}/Engine/external/glm",
+                "${workspaceFolder}/Engine/external/entt/src",
                 "${workspaceFolder}/Engine/external/glad/include",
                 "${workspaceFolder}/Engine/external/glfw/include",
                 "${workspaceFolder}/Engine/external/imgui",
@@ -29,7 +30,7 @@
                 "GLFW_INCLUDE_NONE"
             ],
             "cStandard": "c17",
-            "cppStandard": "c++17"
+            "cppStandard": "c++20"
         }
     ],
     "version": 4

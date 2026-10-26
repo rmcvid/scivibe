@@ -39,6 +39,10 @@
 #include "renderer/frameBuffer.hpp"
 #include "renderer/rendererCurve2D.hpp"
 
+#include "scene/scene.hpp"
+#include "scene/component.hpp"
+#include "scene/entity.hpp"
+
 #include "objet/color.hpp"
 #include "objet/objet2D.hpp"
 #include "objet/line.hpp"

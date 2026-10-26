@@ -3,6 +3,7 @@
 #include "glfw/glfw3.h"
 
 namespace scivibe{
+    static const uint32_t s_MaxFramebuferSize = 8192;
     OpenGLFrameBuffer::OpenGLFrameBuffer(const FrameBufferSpecification& spec)
         : m_Spec(spec)
     {
@@ -91,6 +92,9 @@ namespace scivibe{
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
     void OpenGLFrameBuffer::Resize(uint32_t width, uint32_t height){
+        if( width == 0 || height == 0 || width > s_MaxFramebuferSize || height > s_MaxFramebuferSize){
+            return;
+        }
         m_Spec.Width = width;
         m_Spec.Height = height;
         Invalidate();

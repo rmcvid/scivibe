@@ -27,10 +27,18 @@ namespace scivibe {
                 }
             }
 
+            // Match spdlog's forwarding-reference deduction: retain lvalue
+            // references, but strip rvalue references from temporary arguments.
+            template<typename T>
+            using LogArgumentType = std::conditional_t<
+                std::is_lvalue_reference_v<decltype(LogArgument(std::declval<T>()))>,
+                decltype(LogArgument(std::declval<T>())),
+                std::remove_reference_t<decltype(LogArgument(std::declval<T>()))>>;
+
             // Check the format against the types actually passed to spdlog.
             template<typename... Args>
             using FormatString = spdlog::format_string_t<
-                decltype(LogArgument(std::declval<Args>()))...>;
+                LogArgumentType<Args>...>;
 
         public:
             static void Init();

@@ -12,6 +12,7 @@
 #include <cmath>
 
 
+
 Sandbox2D::Sandbox2D()
     :Layer("SandBox2D") , m_CameraController(1280.0f/720.0f, true)
 {
@@ -49,6 +50,11 @@ void Sandbox2D::OnAttach(){
     m_CurveStyle.WidthPixels = 3.0f;
     m_CurveStyle.Join = scivibe::CurveJoin::Round;
     m_CurveStyle.Cap = scivibe::CurveCap::Round;
+
+    m_ActiveScene = scivibe::CreateRef<scivibe::Scene>(); 
+    auto square = m_ActiveScene->CreateEntity("square");
+    square.AddComponent<scivibe::SpriteRendererComponent>(glm::vec4 {0.0f,1.0f,0.0f,1.0f});
+    m_SquareEntity = square;
 }
 void Sandbox2D::OnDetach(){
     scivibe::PseudoLatex::Shutdown();
@@ -58,17 +64,19 @@ void Sandbox2D::OnDetach(){
 void Sandbox2D::OnUpdate(scivibe::Timestep ts ){
     scivibe::Renderer2D::ResetStats();
     auto& app = scivibe::Application::Get();
+    
     const auto framebuffer = app.GetFrameBuffer();
-    // Keep the scene at 1280 x 720; only its ImGui preview follows the panel size.
     const auto& renderSize = framebuffer->GetSpecification();
-    // Window resize events concern the whole OS window, not this render target.
-    m_CameraController.OnResize(static_cast<float>(renderSize.Width), static_cast<float>(renderSize.Height));
-    m_CameraController.OnUpdate(ts);
+    if(m_ViewPortFocused){
+        m_CameraController.OnResize(static_cast<float>(renderSize.Width), static_cast<float>(renderSize.Height));
+        m_CameraController.OnUpdate(ts);
+    }
     app.GetFrameBuffer()->Bind();
     //m_FrameBuffer->Bind();
     scivibe::RenderCommand::SetClearColor({0.0f,0.0f,0.0f,1.0f});
     scivibe::RenderCommand::Clear();
     scivibe::Renderer2D::BeginScene(m_CameraController.GetCamera());
+    m_ActiveScene->OnUpdate(ts);
     auto now = std::chrono::steady_clock::now();
     float time = std::chrono::duration<float>( now.time_since_epoch() ).count();
     //scivibe::Renderer2D::DrawQuad({1.0f, 1.0f, -0.1f},{std::sinf(time) * 1.0f, std::sinf(time)* 1.0f},time,m_TextureTest, 10.0f,{0.3f,0.3f,0.3f,1.0f});
@@ -79,12 +87,13 @@ void Sandbox2D::OnUpdate(scivibe::Timestep ts ){
     //scivibe::Renderer2D::DrawArrow({0.0f,1.0f,0.0f}, {1.0f,3.0f,0.0f},{0.7f,0.7f,1.0f,1.0f},10.f);
     //scivibe::RendererCurve2D::DrawCarthesian({0,0},{5,5},{1,1}, {0.25,0.25});
     //scivibe::RendererCurve2D::DrawPath(m_CurvePath, m_CurveStyle);
-    if (m_LineAnimation) m_LineAnimation->Update();
     //scivibe::RendererCurve2D::DrawLine(m_LineAnimation);
+    if (m_LineAnimation) m_LineAnimation->Update();
     scivibe::RendererCurve2D::DrawLine(m_Line);
     scivibe::Renderer2D::EndScene();
     scivibe::Renderer2D::BeginScene(m_CameraController.GetCamera());
     scivibe::RenderCommand::SetDepthWrite(false);
+
     m_PsFile.Update(TEXT_SANDBOX_PATH "test.ps");
     if(m_PsFile.GetParagraphCount() > 0){
         scivibe::PseudoLatex::Write(m_PsFile.GetParagraph(), {-1.0f, 0.6f, 0.5f});
@@ -136,8 +145,10 @@ void Sandbox2D::OnImGuiRender(){
     
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0,0});
-    const bool viewportVisible = ImGui::Begin("ViewPort", nullptr,
-        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+    const bool viewportVisible = ImGui::Begin("ViewPort", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+    m_ViewPortFocused = ImGui::IsWindowFocused();
+    m_ViewPortHovered = ImGui::IsWindowHovered();
+    scivibe::Application::Get().GetImGuiLayer()->SetBlockEvents(!m_ViewPortFocused || !m_ViewPortHovered);
     const ImVec2 viewportPanelSize = viewportVisible ? ImGui::GetContentRegionAvail() : ImVec2{0, 0};
     m_ViewPortSize = {std::max(0.0f, viewportPanelSize.x), std::max(0.0f, viewportPanelSize.y)};
     const auto framebuffer = scivibe::Application::Get().GetFrameBuffer();
@@ -159,7 +170,6 @@ void Sandbox2D::OnImGuiRender(){
     ImGui::End();
 
 
-
     ImGui::Begin("Settings");
     auto stats = scivibe::Renderer2D::GetStats();
     ImGui::Text("Renderer2D stats:");
@@ -173,8 +183,6 @@ void Sandbox2D::OnImGuiRender(){
     if (ImGui::Button("Reset animation") && m_LineAnimation)
         m_LineAnimation->Reset();
     ImGui::EndDisabled();
-
-
     ImGui::Separator();
     const size_t paragraphCount = m_PsFile.GetParagraphCount();
     ImGui::BeginDisabled(paragraphCount == 0 || m_PsFile.GetParagraphIndex() == 0);
@@ -206,7 +214,14 @@ void Sandbox2D::OnImGuiRender(){
     bool vsync = app.GetWindow().IsVSync();
     if (ImGui::Checkbox("VSync", &vsync)) app.GetWindow().SetVSync(vsync);
     if (vsync) ImGui::TextDisabled("VSync also limits FPS to the display refresh rate.");
-    ImGui::ColorEdit4("square Color", glm::value_ptr(m_Color));
+
+    if(m_SquareEntity){
+        ImGui::Separator();
+        ImGui::Text("%s", m_SquareEntity.GetComponent<scivibe::TagComponent>().Tag.c_str());
+        auto& squareColor = m_SquareEntity.GetComponent<scivibe::SpriteRendererComponent>().Color;
+        ImGui::ColorEdit4("square Color", glm::value_ptr(squareColor));
+
+    }
     ImGui::Separator();
     const auto& imageSpec = app.GetFrameBuffer()->GetSpecification();
     ImGui::Text("Image : %u x %u px", imageSpec.Width, imageSpec.Height);

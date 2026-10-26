@@ -3,6 +3,8 @@
 #include "objet/color.hpp"
 #include "core/core.hpp"
 
+// on devrait ajouter l'objet curve
+
 namespace scivibe {
     class Line : public Object2D {
     public:
@@ -10,7 +12,7 @@ namespace scivibe {
         glm::vec2 m_End{1.0f};
         float m_Thickness = 2.0f;
         Line() = default;
-        Line(const glm::vec2& start,const glm::vec2& end,const Color& color = Color::White,float thickness = 1.0f)
+        Line(const glm::vec2& start,const glm::vec2& end,const Color& color = Color::White,float thickness = 2.0f)
             : Object2D(),m_Start(start), m_End(end), m_Thickness(thickness) 
         {   
             m_Color = color;

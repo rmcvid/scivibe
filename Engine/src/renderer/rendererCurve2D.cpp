@@ -1,6 +1,7 @@
 #include "renderer/rendererCurve2D.hpp"
 #include "renderer/renderer2D.hpp"
 #include "pch/pch.hpp"
+#include "core/log.hpp"
 
 namespace scivibe{
     CurveStyle RendererCurve2D::s_CurveStyle{};
@@ -207,24 +208,38 @@ namespace scivibe{
         }
         return mesh;
     }
-    void RendererCurve2D::DrawCarthesian(const glm::dvec3& center, const glm::dvec3 size, const glm::dvec3 maille){
-
-    }
-    void RendererCurve2D::DrawCarthesian(const glm::dvec2& center, const glm::dvec2 size, const glm::dvec2 maille, const CurveStyle& style, const glm::dvec2 depassement){
-
-        for(int i = -(int) size.x; i <= (int) size.x; i++){
-            glm::dvec2 start = center + (glm::dvec2) {i*maille.x, maille.y*(size.y + depassement.y)};
-            glm::dvec2 end = center + (glm::dvec2) {i*maille.x, -maille.y*(size.y + depassement.y)};
-            DrawLine(start, end, s_CurveStyle);
+    void RendererCurve2D::DrawCarthesian(const glm::dvec2& center,const glm::dvec2 size,const glm::dvec2 maille,const CurveStyle& style,const glm::dvec2 depassement,const glm::vec2 direction){
+        const glm::dvec2 dirX(std::cos(direction.x),std::sin(direction.x));
+        const glm::dvec2 dirY(-std::sin(direction.y), std::cos(direction.y));
+        const double lengthX = maille.x * (size.x + depassement.x);
+        const double lengthY = maille.y * (size.y + depassement.y);
+        for (int i = -static_cast<int>(size.x); i <= static_cast<int>(size.x); ++i){
+            const glm::dvec2 offset =  static_cast<double>(i) * maille.x * dirX;
+            const glm::dvec2 start = center + offset - lengthY * dirY;
+            const glm::dvec2 end   = center + offset + lengthY * dirY;
+            DrawLine(start, end, style);
         }
-        for(int i = -(int) size.y; i <= (int) size.y; i++){
-            glm::dvec2 start = center + (glm::dvec2) {maille.x*(size.x + depassement.x), i*maille.y};
-            glm::dvec2 end = center + (glm::dvec2) {-maille.x*(size.x + depassement.x), i*maille.y };
+        for (int i = -static_cast<int>(size.y); i <= static_cast<int>(size.y); ++i){
+            const glm::dvec2 offset = static_cast<double>(i) * maille.y * dirY;
+            const glm::dvec2 start = center + offset - lengthX * dirX;
+            const glm::dvec2 end   = center + offset + lengthX * dirX;
             DrawLine(start, end, style);
         }
     }
-    void RendererCurve2D::DrawCarthesian(const glm::dvec2& center, const glm::dvec2 size, const glm::dvec2 maille,const glm::dvec2 depassement){
-        DrawCarthesian(center,size,maille, s_CurveStyle,depassement);
+    void RendererCurve2D::DrawRepere(const Repere& repere, const CurveStyle& style){
+        switch (repere.m_type)
+        {
+        case Repere::Type::carthesian :
+            CurveStyle styleCopie = style;
+            styleCopie.WidthPixels = repere.m_Thickness;
+            DrawCarthesian(repere.m_Position,repere.m_size,repere.m_maille,styleCopie,repere.m_depassement,repere.m_Direction);
+            break;
+        /*case Repere::Type::polar:
+            SCIVIBE_CORE_INFO("le repère polaire n'est pas encore écrit");
+            break;
+        default:
+            break;*/
+        }
     }
 
 }

@@ -186,6 +186,20 @@ namespace scivibe{
         s_Data.TextureSlots[index] = texture;
         return static_cast<float>(index);
     }
+    void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color){
+        VerifyState(PossibleState::Texture);
+        const float textureIndex = PrepareQuad(nullptr);
+        Renderer2D::QuadInfo info{ color, textureIndex};
+        Renderer2D::RenderQuad(info, transform);
+    }
+    void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, const glm::vec2& uvMin, const glm::vec2& uvMax, const float textScale, const glm::vec4 tintColor ){
+        VerifyState(PossibleState::Texture);
+        constexpr glm::vec4 color {1.0f,1.0f,1.0f,1.0f};
+        const float textureIndex = PrepareQuad(texture);
+        Renderer2D::QuadInfo info{ color, textureIndex, tintColor, textScale, uvMin, uvMax};
+        Renderer2D::RenderQuad(info, transform);
+    }
+
     /* Permet de dessiner une texture avec des coordonnées de texture différent des 4 coins*/
     void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const float rotateAngle,
         const Ref<Texture2D>& texture, const glm::vec2& uvMin, const glm::vec2& uvMax, const float textScale, const glm::vec4 tintColor){

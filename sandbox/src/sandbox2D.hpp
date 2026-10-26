@@ -16,10 +16,8 @@ class Sandbox2D : public scivibe::Layer
 
     private:
         scivibe::OrthographicCameraController m_CameraController;
-        
         scivibe::Ref<scivibe::VertexArray> m_VertexArrayBlue;
         scivibe::Ref<scivibe::Shader> m_FlatColorShader;
-        // ici à bouger dans l'engine ?
         scivibe::Ref<scivibe::Font> m_Font;
         scivibe::Ref<scivibe::Texture2D> m_TextureTest;
 
@@ -27,10 +25,16 @@ class Sandbox2D : public scivibe::Layer
         scivibe::CurveStyle m_CurveStyle;
 
         scivibe::PsFile m_PsFile;
-        glm::vec2 m_ViewPortSize = {0,0};
         scivibe::Line m_Line;
+        std::optional<scivibe::Animator<scivibe::Object2D>> m_LineAnimation;
+        std::optional<scivibe::Animator<scivibe::Repere>> m_RepereAnimation;
+        
+        scivibe::Ref<scivibe::Scene> m_ActiveScene;
+        scivibe::Entity  m_SquareEntity;
 
-        std::optional<scivibe::Animator> m_LineAnimation;
+        glm::vec2 m_ViewPortSize = {0,0};
+        bool m_ViewPortFocused = false;
+        bool m_ViewPortHovered = false;
 
         glm::vec4 m_Color = {0.7f,0.7f,0.7f,1.0f};
 

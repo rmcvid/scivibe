@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.28)
 project(scivibe_engine LANGUAGES C CXX)
 
 # Static dependencies linked into the shared engine need PIC on ELF platforms.
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Keep dependencies local and reproducible through the existing submodules.
-foreach(dependency IN ITEMS glfw glm miniaudio spdlog freetype microtex tinyxml2)
+foreach(dependency IN ITEMS glfw glm entt miniaudio spdlog freetype microtex tinyxml2)
     if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/${dependency}/CMakeLists.txt")
         message(FATAL_ERROR "Missing ${dependency}: run git submodule update --init --recursive")
     endif()
@@ -23,8 +23,12 @@ set(GLFW_LIBRARY_TYPE STATIC)
 set(GLM_BUILD_LIBRARY OFF CACHE BOOL "Build GLM as a compiled library")
 set(GLM_BUILD_TESTS OFF CACHE BOOL "Build GLM tests")
 set(GLM_BUILD_INSTALL OFF CACHE BOOL "Install GLM")
+set(ENTT_BUILD_TESTING OFF CACHE BOOL "Build EnTT tests")
+set(ENTT_BUILD_DOCS OFF CACHE BOOL "Build EnTT documentation")
+set(ENTT_INSTALL OFF CACHE BOOL "Install EnTT")
 add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
+add_subdirectory(external/entt)
 add_subdirectory(external/spdlog)
 
 # Keep FreeType self-contained and its build options local to this dependency.
@@ -125,7 +129,7 @@ else()
 endif()
 
 add_library(scivibe::engine ALIAS scivibe)
-target_compile_features(scivibe PUBLIC cxx_std_17)
+target_compile_features(scivibe PUBLIC cxx_std_20)
 target_compile_definitions(scivibe
     PRIVATE
         SCIVIBE_BUILD_DLL
@@ -150,8 +154,9 @@ target_link_libraries(scivibe
         scivibe_glad
         glfw glm::glm
         scivibe_miniaudio
+        EnTT::EnTT
         OpenGL::GL
-    spdlog::spdlog
+        spdlog::spdlog
 )
 
 target_include_directories(scivibe PRIVATE

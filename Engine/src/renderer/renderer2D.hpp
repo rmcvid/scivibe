@@ -20,6 +20,8 @@ namespace scivibe{
             // Upload and draw pending geometry, then reset the batch.
             static void Flush();
             // primitive 
+            static void DrawQuad(const glm::mat4& transform, const glm::vec4& color);
+            static void DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, const glm::vec2& uvMin = {0.0,0.0}, const glm::vec2& uvMax = {1.0,1.0}, const float textScale = 1.00f, const glm::vec4 tintColor = glm::vec4(1.0f));
             static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const float rotateAngle, const Ref<Texture2D>& texture, const glm::vec2& uvMin, const glm::vec2& uvMax, const float textScale = 1.00f, const glm::vec4 tintColor = glm::vec4(1.0f));
             static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const float rotateAngle, const Ref<SubTexture2D>& subTexture, const float textScale = 1.00f, const glm::vec4 tincColor = glm::vec4(1.0f));
             static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const float rotateAngle, const Ref<Texture2D>& texture, const float textScale = 1.00f, const glm::vec4 tincColor = glm::vec4(1.0f));

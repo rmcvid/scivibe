@@ -44,8 +44,13 @@ namespace scivibe{
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
     }
-    void ImGuiLayer::OnEvent(Event &e){
-        
+    void ImGuiLayer::OnEvent(Event& e){
+        if(m_BlockEvents){
+            ImGuiIO& io = ImGui::GetIO();
+            e.SetHandled( e.GetHandled() || (e.IsInCategory(EventCategoryMouse) && io.WantCaptureMouse) );
+            e.SetHandled( e.GetHandled() || (e.IsInCategory(EventCategoryMouseButton) && io.WantCaptureMouse) );
+            e.SetHandled( e.GetHandled() || (e.IsInCategory(EventCategoryKeyboard) && io.WantCaptureKeyboard) );
+        }
     }
 
     void ImGuiLayer::Begin(){

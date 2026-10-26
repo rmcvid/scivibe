@@ -28,3 +28,6 @@
 [submodule "Engine/external/tinyxml2"]
 	path = Engine/external/tinyxml2
 	url = https://github.com/leethomason/tinyxml2.git
+[submodule "Engine/external/entt"]
+	path = Engine/external/entt
+	url = https://github.com/skypjack/entt.git

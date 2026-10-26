@@ -19,29 +19,32 @@ namespace scivibe {
         
         Application(const std::string& name = "Scivibe");
         virtual ~Application();
-
         void Close();
         void Run();
         void onEvent(Event& e);
-
         void PushLayer(Layer* layer);
         void PushOverLayer(Layer* overlay);
+
         inline static Application& Get(){ return *s_Instance; };
         inline Window& GetWindow(){return *m_window;};
-
+        
+        //Recording 
         void InitRecording(const std::string& filename, int fps = FPS_RECORD);
         void StartRecording();
         void RecordFrame();
         void StopRecording();
         bool IsRecording() const {return m_Recorder->IsRecording();}
         bool IsRecorderInitialized() const {return m_Recorder->IsInitialized();}
-
+        
+        
+        // framespeed management
         static Timestep GetDeltaTime(){ return s_DeltaTime;}
-        int GetTargetFPS() const { return s_FrameRateData.TargetFPS; }
-        // Zero disables the software limit; VSync is controlled independently.
         void SetTargetFPS(int fps) { s_FrameRateData.TargetFPS = fps > 0 ? fps : 0; }
+        int GetTargetFPS() const { return s_FrameRateData.TargetFPS; }
         int GetFPS() const { return s_FrameRateData.FPS; }
         double GetAverageFrameMilliseconds() const { return s_FrameRateData.AverageFrameMilliseconds; }
+        ImGuiLayer* GetImGuiLayer(){ return m_ImGuiLayer;}
+        
         Ref<FrameBuffer> GetFrameBuffer()const {return m_FrameBuffer;}
 
     private :
@@ -50,19 +53,18 @@ namespace scivibe {
         void frameRateDataCalcul(double time);
         void AppWait();
 
-        ImGuiLayer* m_ImGuiLayer;
         Scope<Window> m_window;
-        Scope<Recorder> m_Recorder;
+        ImGuiLayer* m_ImGuiLayer;
+        LayerStack m_LayerStack;
         Ref<FrameBuffer> m_FrameBuffer;
         
+        static Application* s_Instance;
         bool m_Running = true;
         bool m_Minimized = false;
-        LayerStack m_LayerStack;
-        static Timestep s_DeltaTime;
         
+        Scope<Recorder> m_Recorder;
+        static Timestep s_DeltaTime;
         double m_LastFrameTime {0.0};
-        static Application* s_Instance;
-
         struct FrameRateData {
             bool firstFrame = true;
             double sampleSeconds = 0.0;
