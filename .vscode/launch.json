@@ -2,13 +2,32 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Run sandbox (CMake / MinGW)",
+      "name": "Debug sandbox (GDB / MinGW)",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${command:cmake.getLaunchTargetPath}",
-      "cwd": "${command:cmake.getLaunchTargetDirectory}",
+      "program": "${workspaceFolder}/build/sandbox/sandbox.exe",
+      "cwd": "${workspaceFolder}/build/sandbox",
       "MIMode": "gdb",
       "miDebuggerPath": "C:/msys64/ucrt64/bin/gdb.exe",
+      "stopAtEntry": false,
+      "environment": [
+        {
+          "name": "PATH",
+          "value": "C:/msys64/ucrt64/bin;${env:PATH}"
+        }
+      ],
+      "setupCommands": [
+        {
+          "description": "Display C++ standard library values with GDB pretty-printers",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "Resolve engine breakpoints when its DLL loads",
+          "text": "-gdb-set breakpoint pending on",
+          "ignoreFailures": false
+        }
+      ],
       "externalConsole": false,
       "preLaunchTask": "CMake Build"
     }

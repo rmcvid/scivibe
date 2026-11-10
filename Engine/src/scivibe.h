@@ -42,6 +42,7 @@
 #include "scene/scene.hpp"
 #include "scene/component.hpp"
 #include "scene/entity.hpp"
+#include "scene/scriptableEntity.hpp"
 
 #include "objet/color.hpp"
 #include "objet/objet2D.hpp"
@@ -50,6 +51,8 @@
 #include "pseudoLatex/font.hpp"
 #include "pseudoLatex/pseudoLatex.hpp"
 #include "pseudoLatex/psFile.hpp"
+
+#include "panel/sceneHierarchyPanel.hpp"
 
 #include "animator/animator.hpp"
 

@@ -55,6 +55,36 @@ void Sandbox2D::OnAttach(){
     auto square = m_ActiveScene->CreateEntity("square");
     square.AddComponent<scivibe::SpriteRendererComponent>(glm::vec4 {0.0f,1.0f,0.0f,1.0f});
     m_SquareEntity = square;
+    m_CameraEntity = m_ActiveScene->CreateEntity("camera");
+    m_CameraEntity.AddComponent<scivibe::CameraComponent>();
+    m_SecondCamera = m_ActiveScene->CreateEntity("SecondCamera");
+    const auto& renderSize = scivibe::Application::Get().GetFrameBuffer()->GetSpecification();
+    m_ActiveScene->OnViewPortResize(renderSize.Width, renderSize.Height);
+   
+    class CameraController : public scivibe::ScriptableEntity{
+    public :
+        void OnCreate()  override  {
+            
+        }
+        void OnUpdate(scivibe::Timestep ts) override {
+            auto& translation = GetComponent<scivibe::TransformComponent>().Translation;
+            const float step = 5.0f * static_cast<float>(ts.GetSeconds());
+            if (scivibe::Input::IsKeyPressed(SCIVIBE_KEY_Q))
+                translation.x -= step;
+            if (scivibe::Input::IsKeyPressed(SCIVIBE_KEY_D))
+                translation.x += step;
+            if (scivibe::Input::IsKeyPressed(SCIVIBE_KEY_Z))
+                translation.y += step;
+            if (scivibe::Input::IsKeyPressed(SCIVIBE_KEY_S))
+                translation.y -= step;
+        }
+        void OnDestroy()  override {
+            
+        }
+    };
+    m_CameraEntity.AddComponent<scivibe::NativeScriptComponent>().Bind<CameraController>();
+    m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
 }
 void Sandbox2D::OnDetach(){
     scivibe::PseudoLatex::Shutdown();
@@ -67,6 +97,17 @@ void Sandbox2D::OnUpdate(scivibe::Timestep ts ){
     
     const auto framebuffer = app.GetFrameBuffer();
     const auto& renderSize = framebuffer->GetSpecification();
+    if (m_ViewPortSize.x >= 1.0f && m_ViewPortSize.y >= 1.0f) {
+        const auto width = static_cast<uint32_t>(m_ViewPortSize.x);
+        const auto height = static_cast<uint32_t>(m_ViewPortSize.y);
+
+        if (renderSize.Width != width || renderSize.Height != height) {
+            framebuffer->Resize(width, height);
+            m_ActiveScene->OnViewPortResize(
+                renderSize.Width, renderSize.Height);
+        }
+    }
+    //update
     if(m_ViewPortFocused){
         m_CameraController.OnResize(static_cast<float>(renderSize.Width), static_cast<float>(renderSize.Height));
         m_CameraController.OnUpdate(ts);
@@ -75,7 +116,7 @@ void Sandbox2D::OnUpdate(scivibe::Timestep ts ){
     //m_FrameBuffer->Bind();
     scivibe::RenderCommand::SetClearColor({0.0f,0.0f,0.0f,1.0f});
     scivibe::RenderCommand::Clear();
-    scivibe::Renderer2D::BeginScene(m_CameraController.GetCamera());
+    //scivibe::Renderer2D::BeginScene(m_CameraController.GetCamera());
     m_ActiveScene->OnUpdate(ts);
     auto now = std::chrono::steady_clock::now();
     float time = std::chrono::duration<float>( now.time_since_epoch() ).count();
@@ -88,21 +129,22 @@ void Sandbox2D::OnUpdate(scivibe::Timestep ts ){
     //scivibe::RendererCurve2D::DrawCarthesian({0,0},{5,5},{1,1}, {0.25,0.25});
     //scivibe::RendererCurve2D::DrawPath(m_CurvePath, m_CurveStyle);
     //scivibe::RendererCurve2D::DrawLine(m_LineAnimation);
-    if (m_LineAnimation) m_LineAnimation->Update();
-    scivibe::RendererCurve2D::DrawLine(m_Line);
-    scivibe::Renderer2D::EndScene();
-    scivibe::Renderer2D::BeginScene(m_CameraController.GetCamera());
-    scivibe::RenderCommand::SetDepthWrite(false);
+    //if (m_LineAnimation) m_LineAnimation->Update();
+    //scivibe::RendererCurve2D::DrawLine(m_Line);
+    //scivibe::Renderer2D::EndScene();
+    //scivibe::Renderer2D::BeginScene(m_CameraController.GetCamera());
+    //scivibe::RenderCommand::SetDepthWrite(false);
 
-    m_PsFile.Update(TEXT_SANDBOX_PATH "test.ps");
-    if(m_PsFile.GetParagraphCount() > 0){
-        scivibe::PseudoLatex::Write(m_PsFile.GetParagraph(), {-1.0f, 0.6f, 0.5f});
-    }
-    scivibe::Renderer2D::EndScene();
+    //m_PsFile.Update(TEXT_SANDBOX_PATH "test.ps");
+    //if(m_PsFile.GetParagraphCount() > 0){
+    //    scivibe::PseudoLatex::Write(m_PsFile.GetParagraph(), {-1.0f, 0.6f, 0.5f});
+    //}
+    //scivibe::Renderer2D::EndScene();
     scivibe::RenderCommand::SetDepthWrite(true);
     app.GetFrameBuffer()->Unbind();
-    //m_FrameBuffer->Unbind();
 }
+
+
 void Sandbox2D::OnImGuiRender(){
     ImGui::SetNextWindowSizeConstraints(ImVec2(400.0f, 360.0f), ImVec2(FLT_MAX, FLT_MAX));
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
@@ -169,6 +211,7 @@ void Sandbox2D::OnImGuiRender(){
     ImGui::PopStyleVar();
     ImGui::End();
 
+    m_SceneHierarchyPanel.OnImGuiRender();
 
     ImGui::Begin("Settings");
     auto stats = scivibe::Renderer2D::GetStats();
@@ -214,14 +257,6 @@ void Sandbox2D::OnImGuiRender(){
     bool vsync = app.GetWindow().IsVSync();
     if (ImGui::Checkbox("VSync", &vsync)) app.GetWindow().SetVSync(vsync);
     if (vsync) ImGui::TextDisabled("VSync also limits FPS to the display refresh rate.");
-
-    if(m_SquareEntity){
-        ImGui::Separator();
-        ImGui::Text("%s", m_SquareEntity.GetComponent<scivibe::TagComponent>().Tag.c_str());
-        auto& squareColor = m_SquareEntity.GetComponent<scivibe::SpriteRendererComponent>().Color;
-        ImGui::ColorEdit4("square Color", glm::value_ptr(squareColor));
-
-    }
     ImGui::Separator();
     const auto& imageSpec = app.GetFrameBuffer()->GetSpecification();
     ImGui::Text("Image : %u x %u px", imageSpec.Width, imageSpec.Height);

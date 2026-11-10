@@ -4,6 +4,18 @@
 #include "constants/keyCode.hpp"
 #include "constants/mouseCode.hpp"
 namespace scivibe{
+    class Camera{
+        public:
+            Camera() = default;
+            Camera(const glm::mat4& projection) 
+                : m_Projection(projection){}
+            const glm::mat4& GetProjection() const {return m_Projection;};
+            virtual ~Camera() = default;
+        protected:
+            glm::mat4 m_Projection;
+    };
+
+
     class SCIVIBE_API OrthographicCamera{
         public:
             OrthographicCamera(float left, float right, float bottom, float top);

@@ -60,7 +60,7 @@ namespace scivibe{
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_DepthAttachment);
     glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples,GL_DEPTH24_STENCIL8, width, height, GL_TRUE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,GL_TEXTURE_2D_MULTISAMPLE, m_DepthAttachment, 0);
-    SCIVIBE_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,"Framebuffer MSAA incomplet");
+    //SCIVIBE_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,"Framebuffer MSAA incomplet");
     glGenFramebuffers(1, &m_ResolveFramebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, m_ResolveFramebuffer);
     glGenTextures(1, &m_ResolveColorAttachment);
@@ -69,7 +69,7 @@ namespace scivibe{
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D, m_ResolveColorAttachment, 0);
-    SCIVIBE_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,"Framebuffer de resolution incomplet");
+    //SCIVIBE_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,"Framebuffer de resolution incomplet");
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

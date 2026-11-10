@@ -99,6 +99,19 @@ namespace scivibe{
         s_Data.VertexBufferBase.reset();
         ResetData();
     }
+
+    void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform){
+        ResetData();
+        glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
+
+        const auto& spec = Application::Get().GetFrameBuffer()->GetSpecification();
+        RendererCurve2D::SetView(viewProj,glm::uvec2{spec.Width, spec.Height});
+
+        s_Data.TextureShader->Bind();
+        s_Data.TextureShader->SetMat4("uViewProjection",viewProj);
+        s_Data.TextShader->Bind();
+        s_Data.TextShader->SetMat4("uViewProjection",viewProj);
+    }
     
     void Renderer2D::BeginScene(const OrthographicCamera& camera){
         ResetData();
