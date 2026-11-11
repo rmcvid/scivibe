@@ -34,3 +34,6 @@
 [submodule "Engine/external/yaml-cpp"]
 	path = Engine/external/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp.git
+[submodule "Engine/external/imguizmo"]
+	path = Engine/external/imguizmo
+	url = https://github.com/CedricGuillemet/ImGuizmo.git
