@@ -31,3 +31,6 @@
 [submodule "Engine/external/entt"]
 	path = Engine/external/entt
 	url = https://github.com/skypjack/entt.git
+[submodule "Engine/external/yaml-cpp"]
+	path = Engine/external/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp.git
