@@ -25,6 +25,8 @@ namespace scivibe{
             void Begin();
             void End();
             void SetBlockEvents(bool block) { m_BlockEvents = block;};
+            void SetDarkThemeColor();
+
         private:
             float m_time = 0.0f;
             bool m_BlockEvents = true;

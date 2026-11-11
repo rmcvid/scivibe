@@ -15,6 +15,10 @@ class Sandbox2D : public scivibe::Layer
         void OnEvent(scivibe::Event& e) override;
 
     private:
+        bool OnKeyPressed(scivibe::KeyPressedEvent& e);
+        void NewScene();
+        void SaveSceneAs();
+        void OpenScene();
         scivibe::OrthographicCameraController m_CameraController;
 
         scivibe::Ref<scivibe::VertexArray> m_VertexArrayBlue;

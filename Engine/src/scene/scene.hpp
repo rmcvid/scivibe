@@ -31,6 +31,7 @@ namespace scivibe{
         entt::registry m_Registry;
         friend class Entity;
         friend class SceneHierarchyPanel;
+        friend class SceneSerializer;
     };
     template<>
     SCIVIBE_API void Scene::OnComponentAdded<CameraComponent>(

@@ -5,7 +5,7 @@ project(scivibe_engine LANGUAGES C CXX)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Keep dependencies local and reproducible through the existing submodules.
-foreach(dependency IN ITEMS glfw glm entt miniaudio spdlog freetype microtex tinyxml2)
+foreach(dependency IN ITEMS glfw glm entt miniaudio spdlog freetype microtex tinyxml2 yaml-cpp)
     if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/${dependency}/CMakeLists.txt")
         message(FATAL_ERROR "Missing ${dependency}: run git submodule update --init --recursive")
     endif()
@@ -30,6 +30,17 @@ add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
 add_subdirectory(external/entt)
 add_subdirectory(external/spdlog)
+
+# Keep YAML options local; consumers inherit headers and static-link definitions.
+function(scivibe_add_yaml_cpp)
+    set(YAML_BUILD_SHARED_LIBS OFF)
+    set(YAML_CPP_BUILD_TESTS OFF)
+    set(YAML_CPP_BUILD_TOOLS OFF)
+    set(YAML_CPP_INSTALL OFF)
+    set(YAML_CPP_FORMAT_SOURCE OFF)
+    add_subdirectory(external/yaml-cpp)
+endfunction()
+scivibe_add_yaml_cpp()
 
 # Keep FreeType self-contained and its build options local to this dependency.
 function(scivibe_add_freetype)
@@ -140,6 +151,7 @@ target_compile_definitions(scivibe
     # The trailing slash allows SHADER_PATH "shader.vs" in C++.
     "SHADER_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/src/shader/\""
     "IMAGE_ENGINE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/image/\""
+    "FONT_ENGINE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/font/\""
 )
 target_include_directories(scivibe PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(scivibe 
@@ -157,6 +169,7 @@ target_link_libraries(scivibe
         EnTT::EnTT
         OpenGL::GL
         spdlog::spdlog
+        yaml-cpp::yaml-cpp
 )
 
 target_include_directories(scivibe PRIVATE

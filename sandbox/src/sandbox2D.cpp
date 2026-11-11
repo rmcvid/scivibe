@@ -13,6 +13,7 @@
 
 
 
+
 Sandbox2D::Sandbox2D()
     :Layer("SandBox2D") , m_CameraController(1280.0f/720.0f, true)
 {
@@ -28,6 +29,10 @@ void Sandbox2D::OnAttach(){
     settings.UnitsPerPixel = 0.005f;
     scivibe::PseudoLatex::Init(settings);
     m_PsFile.Load(TEXT_SANDBOX_PATH "test.ps");
+    m_ActiveScene = scivibe::CreateRef<scivibe::Scene>();
+    const auto& renderSize = scivibe::Application::Get().GetFrameBuffer()->GetSpecification();
+    m_ActiveScene->OnViewPortResize(renderSize.Width, renderSize.Height);
+    #if 0
     m_Line = scivibe::Line({-0.75,-0.75}, { 0.75,0.75},scivibe::Color::Green,10.0f);
     scivibe::Line destination = m_Line;
     destination.m_Position = {0.5f, 0.0f, 0.0f};
@@ -51,15 +56,13 @@ void Sandbox2D::OnAttach(){
     m_CurveStyle.Join = scivibe::CurveJoin::Round;
     m_CurveStyle.Cap = scivibe::CurveCap::Round;
 
-    m_ActiveScene = scivibe::CreateRef<scivibe::Scene>(); 
     auto square = m_ActiveScene->CreateEntity("square");
     square.AddComponent<scivibe::SpriteRendererComponent>(glm::vec4 {0.0f,1.0f,0.0f,1.0f});
     m_SquareEntity = square;
     m_CameraEntity = m_ActiveScene->CreateEntity("camera");
     m_CameraEntity.AddComponent<scivibe::CameraComponent>();
     m_SecondCamera = m_ActiveScene->CreateEntity("SecondCamera");
-    const auto& renderSize = scivibe::Application::Get().GetFrameBuffer()->GetSpecification();
-    m_ActiveScene->OnViewPortResize(renderSize.Width, renderSize.Height);
+    
    
     class CameraController : public scivibe::ScriptableEntity{
     public :
@@ -83,8 +86,9 @@ void Sandbox2D::OnAttach(){
         }
     };
     m_CameraEntity.AddComponent<scivibe::NativeScriptComponent>().Bind<CameraController>();
-    m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+#endif
 
+    m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 }
 void Sandbox2D::OnDetach(){
     scivibe::PseudoLatex::Shutdown();
@@ -172,12 +176,26 @@ void Sandbox2D::OnImGuiRender(){
     ImGui::PopStyleVar();
     if(opt_fullscreen){ ImGui::PopStyleVar(2); }
     ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& style = ImGui::GetStyle();
+    float windowMinSizeX = style.WindowMinSize.x;
+    style.WindowMinSize.x = 370.0f;
     if(io.ConfigFlags & ImGuiConfigFlags_DockingEnable){
         ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
         ImGui::DockSpace(dockspace_id, ImVec2(0.0f,0.0f), dockspace_flags);
     }
+    style.WindowMinSize.x = windowMinSizeX;
     if(ImGui::BeginMenuBar()){
         if(ImGui::BeginMenu("File")){
+            if( ImGui::MenuItem("New", "Ctrl+N")){
+                NewScene();
+            }
+            if( ImGui::MenuItem("Save as ...", "Ctrl+Shift+S")){
+                SaveSceneAs();
+            }
+            if (ImGui::MenuItem("Open..", "Ctrl+O")) {
+                OpenScene();
+            }
+
             if(ImGui::MenuItem("Exit")) scivibe::Application::Get().Close();
             ImGui::EndMenu();
         }
@@ -280,6 +298,61 @@ void Sandbox2D::OnImGuiRender(){
     ImGui::End();
 
 };
+void Sandbox2D::NewScene(){
+    m_ActiveScene = scivibe::CreateRef<scivibe::Scene>();
+    m_ActiveScene->OnViewPortResize((uint32_t) m_ViewPortSize.x, (uint32_t) m_ViewPortSize.y );
+    m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+}
+void Sandbox2D::SaveSceneAs(){
+    std::string filepath = scivibe::FileDialogs::SaveFile("Scivibe scene (*.scb)\0*.scivibe\0;*.yaml\0");
+    if(!filepath.empty()){
+        scivibe::SceneSerializer serializer(m_ActiveScene);
+        serializer.Serialize(filepath);
+    }
+}
+void Sandbox2D::OpenScene(){
+    std::string filepath = scivibe::FileDialogs::OpenFile("Scivibe Scene (*.scb;*.scivibe;*.yaml)\0*.scb;*.scivibe;*.yaml\0");
+    if (!filepath.empty()) {
+        auto loadedScene = scivibe::CreateRef<scivibe::Scene>();
+        const auto& size = scivibe::Application::Get().GetFrameBuffer()->GetSpecification();
+        loadedScene->OnViewPortResize(size.Width, size.Height);
+        scivibe::SceneSerializer serializer(loadedScene);
+        if (serializer.Deserialize(filepath)) {
+            m_ActiveScene = loadedScene;
+            m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+        } else {
+            SCIVIBE_ERROR("Impossible de charger : {}", filepath);
+        }
+    }
+}
+
+bool Sandbox2D::OnKeyPressed(scivibe::KeyPressedEvent& e){
+    if(e.GetRepeatCount() > 0) return false;
+    bool control = scivibe::Input::IsKeyPressed(SCIVIBE_KEY_LEFT_CONTROL) || scivibe::Input::IsKeyPressed(SCIVIBE_KEY_RIGHT_CONTROL);
+    bool shift = scivibe::Input::IsKeyPressed(SCIVIBE_KEY_LEFT_SHIFT) || scivibe::Input::IsKeyPressed(SCIVIBE_KEY_RIGHT_SHIFT);
+    switch (e.GetKeyCode()){
+        case SCIVIBE_KEY_N:{
+            if(control) NewScene();
+            return true;
+        }
+        case SCIVIBE_KEY_O :{
+            if(control) OpenScene();
+            return true;
+
+        }
+        case SCIVIBE_KEY_S:{
+            if(control && shift) SaveSceneAs();
+            return true;
+        }
+        case SCIVIBE_KEY_SPACE:
+            m_ActiveScene->OnViewPortResize((uint32_t) m_ViewPortSize.x, (uint32_t) m_ViewPortSize.y );
+            return true;
+        default:
+            return false;
+    }
+}
 void Sandbox2D::OnEvent(scivibe::Event& e){
     m_CameraController.OnEvent(e);
+    scivibe::EventDispatcher dispatcher(e);
+    dispatcher.Dispatch<scivibe::KeyPressedEvent>(SCIVIBE_BIND_EVENT_FN(Sandbox2D::OnKeyPressed));
 };

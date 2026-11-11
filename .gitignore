@@ -12,3 +12,6 @@ document/
 !.vscode/extensions.json
 !.vscode/c_cpp_properties.json
 sandbox/video/*
+sandbox/text/*
+sandbox/scene/*
+Engine/font/Open_Sans/static/*

@@ -21,6 +21,7 @@ target_compile_definitions(sandbox PRIVATE
     "VIDEO_SANDBOX_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/video/\""
     "FONT_SANDBOX_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/fonts/\""
     "TEXT_SANDBOX_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/text/\""
+    "SCENE_SANDBOX_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/scene/\""
 )
 
 # Keep a separate PCH: the sandbox imports the DLL, while the engine exports it.

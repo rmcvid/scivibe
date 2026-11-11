@@ -43,6 +43,7 @@
 #include "scene/component.hpp"
 #include "scene/entity.hpp"
 #include "scene/scriptableEntity.hpp"
+#include "scene/sceneSerializer.hpp"
 
 #include "objet/color.hpp"
 #include "objet/objet2D.hpp"
@@ -60,5 +61,6 @@
 
 #include "shader/shader.hpp"
 
+#include "utils/platformUtils.hpp"
 
 
