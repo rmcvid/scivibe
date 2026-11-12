@@ -1,6 +1,7 @@
 #include "plateform/OpenGl/OpenGLTexture.hpp"
 #include "stb_image.h"
 #include "core/log.hpp"
+#include <stdexcept>
 
 
 namespace scivibe{
@@ -19,16 +20,16 @@ namespace scivibe{
 
     OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
     : m_Path(path){
-        int width, height, channels;
+        int width = 0, height = 0, channels = 0;
         stbi_set_flip_vertically_on_load(1);
-        stbi_uc* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
-        SCIVIBE_ASSERT(data, "failed to load image");
+        // RGBA also handles grayscale images and avoids RGB row-alignment issues.
+        stbi_uc* data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+        if (!data)
+            throw std::runtime_error("Impossible de charger l'image : " + path);
         m_Width = width;
         m_Height = height;
 
-        GLenum internalFormat {0}, dataFormat {0};
-        GetFormat(channels, internalFormat, dataFormat);
-        SCIVIBE_ASSERT(internalFormat, "number of channels not suported {0}", channels);
+        const GLenum internalFormat = GL_RGBA8, dataFormat = GL_RGBA;
         m_DataFormat = dataFormat;
         m_InternalFormat = internalFormat;
 

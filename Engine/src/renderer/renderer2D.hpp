@@ -6,6 +6,7 @@
 #include "pseudoLatex/font.hpp"
 #include <cstdint>
 #include <string_view>
+#include "editor/editorCamera.hpp"
 namespace scivibe{
     class SCIVIBE_API Renderer2D
     {
@@ -16,6 +17,7 @@ namespace scivibe{
             static void Init();
             static void Shutdown();
             static void BeginScene(const Camera& camera, const glm::mat4& transform);
+            static void BeginScene(const EditorCamera& camera);
             static void BeginScene(const OrthographicCamera& camera);
             static void EndScene();
             // Upload and draw pending geometry, then reset the batch.
@@ -38,6 +40,8 @@ namespace scivibe{
             
             static void DrawArrow(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color, float width = 0.0f, const float widthRatio = 0.2 , const float overHangRatio = 4.0f/20.0f);
             static void DrawGlyphSDF(const glm::vec3 &position, const glm::vec2 &size, float rotateAngle, const Ref<Texture2D>& texture, const glm::vec2 &uvMin, const glm::vec2 &uvMax, float textScale = 1.0f, glm::vec4 tintColor = glm::vec4(1.0f));
+            static void DrawGlyphSDF(const glm::mat4& transform, const Ref<Texture2D>& texture,
+                const glm::vec2& uvMin, const glm::vec2& uvMax, const glm::vec4& tintColor);
             static void Write(std::u32string_view text,Font& font,const glm::vec3& position, const float scale = 1.0f,const glm::vec4& color = glm::vec4(1.0f));
 
             // stats

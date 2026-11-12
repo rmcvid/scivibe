@@ -1,19 +1,16 @@
 #pragma once
 #include "entt/entt.hpp"
 #include "pch/pch.hpp"
+#include "editor/editorCamera.hpp"
 // #include "scene/component.hpp" retirer la circulaire pour ne pas devoir déclarer les composants
 // comment faire pour ne pas donner tous les tempaltes, ils devraient deja etre définie non ?
 
 
 namespace scivibe{
     class Entity;
-    class SceneHierarchyPanel;
-
-    struct CameraComponent;
     struct TransformComponent;
-    struct SpriteRendererComponent;
-    struct TagComponent;
-    struct NativeScriptComponent;
+    enum class AnimationColorTarget;
+    class SceneHierarchyPanel;
     class SCIVIBE_API Scene{
     public:
         Scene();
@@ -21,36 +18,33 @@ namespace scivibe{
         Entity CreateEntity(const std::string& name = std::string());
         void DestroyEntity(Entity entity);
         entt::registry* Reg() { return &m_Registry;}
-        void OnUpdate(Timestep ts);
+        void OnUpdateRunTime(Timestep ts);
+        void OnUpdateEditor(Timestep ts, EditorCamera& camera);
         void OnViewPortResize(uint32_t width, uint32_t height );
+        Entity GetPrimaryCameraEntity();
+        int GetCurrentSlide() const { return m_CurrentSlide; }
+        void SetCurrentSlide(int slide);
+        bool IsVisibleOnCurrentSlide(const std::vector<int>& slides) const;
+        void RestartSlideAnimations();
+        bool GetAnimateSlides() const { return m_AnimateSlides; }
+        void SetAnimateSlides(bool enabled);
+        TransformComponent GetRenderTransform(entt::entity entity) const;
+        bool HasAnimatedPose(entt::entity entity) const;
+        glm::vec4 GetRenderColor(entt::entity entity, AnimationColorTarget target) const;
+        bool TryGetRenderColor(entt::entity entity, AnimationColorTarget target, glm::vec4& color) const;
+        void ResetAnimationPreview();
     private:
-        template<typename T>
-        void OnComponentAdded(Entity entity, T& component);
-
+        int m_CurrentSlide = 1;
+        bool m_AnimateSlides = true;
+        void UpdateSlideAnimations(Timestep ts);
+        void RenderContents();
+        void OnCameraConstructed(entt::registry& registry, entt::entity entity);
         uint32_t m_ViewportWidth =0 , m_ViewportHeight =0 ; 
         entt::registry m_Registry;
         friend class Entity;
         friend class SceneHierarchyPanel;
         friend class SceneSerializer;
     };
-    template<>
-    SCIVIBE_API void Scene::OnComponentAdded<CameraComponent>(
-        Entity entity, CameraComponent& component);
-
-    template<>
-    SCIVIBE_API void Scene::OnComponentAdded<TransformComponent>(
-        Entity entity, TransformComponent& component);
-
-    template<>
-    SCIVIBE_API void Scene::OnComponentAdded<SpriteRendererComponent>(
-        Entity entity, SpriteRendererComponent& component);
-
-    template<>
-    SCIVIBE_API void Scene::OnComponentAdded<TagComponent>(
-        Entity entity, TagComponent& component);
-
-    template<>
-    SCIVIBE_API void Scene::OnComponentAdded<NativeScriptComponent>(
-        Entity entity, NativeScriptComponent& component);
+    
     
 }

@@ -1,6 +1,7 @@
 #include "pseudoLatex/microtexAdapter.hpp"
 #include "pseudoLatex/font.hpp"
 #include "renderer/renderer2D.hpp"
+#include <glm/gtc/matrix_transform.hpp>
 #include "core/log.hpp"
 
 #include <latex.h>
@@ -93,8 +94,8 @@ namespace scivibe{
 
     class MicroTeXGraphics final : public tex::Graphics2D {
         public:
-            MicroTeXGraphics(const glm::vec3& position, float unitsPerPixel) :
-                m_Position(position),  m_UnitsPerPixel(unitsPerPixel)
+            MicroTeXGraphics(const glm::mat4& transform, float unitsPerPixel, const glm::vec4& tint) :
+                m_Transform(transform), m_Tint(tint), m_UnitsPerPixel(unitsPerPixel)
             {}
 
             void setColor(tex::color color) override{ m_Color = color; }
@@ -137,9 +138,9 @@ namespace scivibe{
                 const glm::vec2 transformedCenter =m_Translation + m_Scale * localCenter;
 
                 const glm::vec3 center{
-                    m_Position.x + transformedCenter.x * m_UnitsPerPixel,
-                    m_Position.y - transformedCenter.y * m_UnitsPerPixel,
-                    m_Position.z
+                    transformedCenter.x * m_UnitsPerPixel,
+                    -transformedCenter.y * m_UnitsPerPixel,
+                    0.0f
                 };
                 const glm::vec2 size = glm::vec2(glyph.Size) * ratio * m_Scale * m_UnitsPerPixel;
                 const glm::vec4 color{
@@ -149,7 +150,9 @@ namespace scivibe{
                     tex::color_a(m_Color) / 255.0f
                 };
 
-                Renderer2D::DrawGlyphSDF(center,size,0.0f,rasterFont.GetAtlasTexture(),glyph.UVMin,glyph.UVMax,1.0f,color);
+                const glm::mat4 glyphTransform = m_Transform * glm::translate(glm::mat4(1.0f), center) *
+                    glm::scale(glm::mat4(1.0f), glm::vec3(size, 1.0f));
+                Renderer2D::DrawGlyphSDF(glyphTransform, rasterFont.GetAtlasTexture(), glyph.UVMin, glyph.UVMax, color * m_Tint);
                 
             }
 
@@ -170,11 +173,12 @@ namespace scivibe{
                 const glm::vec2 end{x2,y2};
                 const glm::vec2 delta = end - start;
                 const float length = glm::length(delta);
+                if (length <= 0.0f) return;
                 
                 const glm::vec2 worldScale = m_Scale*glm::vec2(m_UnitsPerPixel,- m_UnitsPerPixel);
-                const glm::vec2 worldStart = glm::vec2(m_Position) + m_Translation * glm::vec2(m_UnitsPerPixel, -m_UnitsPerPixel)
+                const glm::vec2 worldStart = m_Translation * glm::vec2(m_UnitsPerPixel, -m_UnitsPerPixel)
                         + start * worldScale;
-                const glm::vec2 worldEnd = glm::vec2(m_Position) + m_Translation * glm::vec2(m_UnitsPerPixel, -m_UnitsPerPixel) +
+                const glm::vec2 worldEnd = m_Translation * glm::vec2(m_UnitsPerPixel, -m_UnitsPerPixel) +
                         end * worldScale;
                 const glm::vec2 worldDelta = worldEnd - worldStart;
                 const float worldLength = glm::length(worldDelta);       
@@ -188,7 +192,10 @@ namespace scivibe{
                     tex::color_b(m_Color) / 255.0f,
                     tex::color_a(m_Color) / 255.0f
                 };
-                Renderer2D::DrawQuad(glm::vec3(center, m_Position.z),{worldLength, thickness},angle,color);
+                const auto lineTransform = m_Transform * glm::translate(glm::mat4(1.0f), glm::vec3(center, 0.0f)) *
+                    glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0, 0, 1)) *
+                    glm::scale(glm::mat4(1.0f), glm::vec3(worldLength, thickness, 1.0f));
+                Renderer2D::DrawQuad(lineTransform, color * m_Tint);
             }
 
             void drawRect(float, float, float, float) override {
@@ -208,7 +215,8 @@ namespace scivibe{
             }
 
         private:
-            glm::vec3 m_Position;
+            glm::mat4 m_Transform;
+            glm::vec4 m_Tint;
             float m_UnitsPerPixel;
             glm::vec2 m_Translation{0.0f};
             glm::vec2 m_Scale{1.0f};
@@ -218,7 +226,10 @@ namespace scivibe{
     };
 
     void DrawMicroTeX(tex::TeXRender& formula,const glm::vec3& position,float unitsPerPixel) {
-        MicroTeXGraphics graphics(position, unitsPerPixel);
+        DrawMicroTeX(formula, glm::translate(glm::mat4(1.0f), position), unitsPerPixel);
+    }
+    void DrawMicroTeX(tex::TeXRender& formula,const glm::mat4& transform,float unitsPerPixel,const glm::vec4& tint) {
+        MicroTeXGraphics graphics(transform, unitsPerPixel, tint);
         formula.draw(graphics, 0, 0);
     }
 }

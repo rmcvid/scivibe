@@ -5,7 +5,7 @@ project(scivibe_engine LANGUAGES C CXX)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Keep dependencies local and reproducible through the existing submodules.
-foreach(dependency IN ITEMS glfw glm entt miniaudio spdlog freetype microtex tinyxml2 yaml-cpp)
+foreach(dependency IN ITEMS glfw glm entt miniaudio spdlog freetype microtex tinyxml2 yaml-cpp imguizmo)
     if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/${dependency}/CMakeLists.txt")
         message(FATAL_ERROR "Missing ${dependency}: run git submodule update --init --recursive")
     endif()
@@ -30,6 +30,19 @@ add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
 add_subdirectory(external/entt)
 add_subdirectory(external/spdlog)
+
+# Embed ImGuizmo once in the engine DLL, alongside the shared ImGui context.
+add_library(scivibe_imguizmo OBJECT
+    external/imguizmo/src/ImGuizmo.cpp
+)
+target_include_directories(scivibe_imguizmo
+    PUBLIC
+        "${CMAKE_CURRENT_SOURCE_DIR}/external/imguizmo/src"
+    PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/external/imgui"
+)
+
+target_compile_features(scivibe_imguizmo PUBLIC cxx_std_17)
 
 # Keep YAML options local; consumers inherit headers and static-link definitions.
 function(scivibe_add_yaml_cpp)
@@ -99,6 +112,7 @@ if(SCIVIBE_SHADERS)
 endif()
 add_library(scivibe SHARED ${SCIVIBE_SOURCES} ${SCIVIBE_SHADERS})
 add_dependencies(scivibe scivibe_ffmpeg_build)
+
 set_target_properties(scivibe PROPERTIES
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN YES
@@ -120,6 +134,7 @@ add_library(scivibe_imgui OBJECT
     external/imgui/imgui_tables.cpp
     external/imgui/imgui_widgets.cpp
     external/imgui/imgui_demo.cpp
+    external/imgui/misc/cpp/imgui_stdlib.cpp
 )
 
 target_include_directories(scivibe_imgui PUBLIC
@@ -130,12 +145,15 @@ target_compile_features(scivibe_imgui PUBLIC cxx_std_17)
 
 if(WIN32)
     target_compile_definitions(scivibe_imgui PRIVATE "IMGUI_API=__declspec(dllexport)")
+    # ImGuizmo uses IMGUI_API too; both OBJECT libraries live in the same DLL.
+    target_compile_definitions(scivibe_imguizmo PRIVATE "IMGUI_API=__declspec(dllexport)")
     target_compile_definitions(scivibe
         PRIVATE "IMGUI_API=__declspec(dllexport)"
         INTERFACE "IMGUI_API=__declspec(dllimport)"
     )
 else()
     target_compile_definitions(scivibe_imgui PRIVATE "IMGUI_API=__attribute__((visibility(\"default\")))")
+    target_compile_definitions(scivibe_imguizmo PRIVATE "IMGUI_API=__attribute__((visibility(\"default\")))")
     target_compile_definitions(scivibe PUBLIC "IMGUI_API=__attribute__((visibility(\"default\")))")
 endif()
 
@@ -170,6 +188,7 @@ target_link_libraries(scivibe
         OpenGL::GL
         spdlog::spdlog
         yaml-cpp::yaml-cpp
+        scivibe_imguizmo
 )
 
 target_include_directories(scivibe PRIVATE

@@ -9,7 +9,6 @@
 #include <glm/glm.hpp>
 #include <miniaudio.h>
 
-#include "objet/color.hpp"
 #include "core/log.hpp"
 #include "shader/shader.hpp"
 
@@ -21,7 +20,6 @@
 #include "layer/layer.hpp"
 
 #include "core/application.hpp"
-
 
 #include "gui/imGuiLayer.hpp"
 
@@ -62,5 +60,10 @@
 #include "shader/shader.hpp"
 
 #include "utils/platformUtils.hpp"
+
+#include "math/math.hpp"
+#include "math/functionCurve.hpp"
+
+#include "editor/editorCamera.hpp"
 
 

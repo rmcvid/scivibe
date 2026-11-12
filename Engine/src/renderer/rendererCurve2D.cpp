@@ -2,6 +2,10 @@
 #include "renderer/renderer2D.hpp"
 #include "pch/pch.hpp"
 #include "core/log.hpp"
+#include <glm/gtc/matrix_transform.hpp>
+#include <array>
+#include <cmath>
+#include <limits>
 
 namespace scivibe{
     CurveStyle RendererCurve2D::s_CurveStyle{};
@@ -34,7 +38,10 @@ namespace scivibe{
         DrawPath(path, style, z);
     }
     void RendererCurve2D::DrawPath(const CurvePath& path,const CurveStyle& style,float z){
-        const CurveMesh mesh = BuildStroke(path, style, z);
+        DrawPath(path, style, glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, z)));
+    }
+    void RendererCurve2D::DrawPath(const CurvePath& path,const CurveStyle& style,const glm::mat4& transform){
+        const CurveMesh mesh = BuildStroke(path, style, transform);
         for (std::size_t i = 0; i < mesh.Indices.size(); i += 3){
             const auto& a = mesh.Positions[mesh.Indices[i]];
             const auto& b = mesh.Positions[mesh.Indices[i + 1]];
@@ -49,49 +56,120 @@ namespace scivibe{
             for (int r = 0; r < 4; ++r)
                 if (!std::isfinite(viewProjection[c][r]))
                     throw std::invalid_argument("Matrice de courbe non finie");
-        if (std::abs(viewProjection[0][3]) > 1e-8 ||
-            std::abs(viewProjection[1][3]) > 1e-8 ||
-            std::abs(viewProjection[2][3]) > 1e-8 ||
-            std::abs(viewProjection[3][3]) < 1e-8)
-            throw std::invalid_argument("BuildStroke exige une vue orthographique");
         s_CurveView = glm::dmat4(viewProjection);
         s_CurveViewport = framebufferSize;
         s_CurveViewReady = true;
     }
-    CurveMesh RendererCurve2D::BuildStroke( const CurvePath& path, const CurveStyle& style, float z){
+    CurveMesh RendererCurve2D::BuildStroke( const CurvePath& path, const CurveStyle& style, const glm::mat4& transform){
         CurveMesh mesh;
         if (!s_CurveViewReady) throw std::logic_error("Appeler SetView avant BuildStroke");
-        if (!std::isfinite(style.WidthPixels) || !std::isfinite(z) || !std::isfinite(style.MiterLimit) || style.MiterLimit < 1.0f)
+        if (!std::isfinite(style.WidthPixels) || !std::isfinite(style.MiterLimit) || style.MiterLimit < 1.0f)
             throw std::invalid_argument("Style de courbe invalide");
         if (style.WidthPixels <= 0.0f || s_CurveViewport.x == 0 || s_CurveViewport.y == 0) return mesh;
         const double halfWidth = style.WidthPixels * 0.5;
         const glm::dvec2 viewport(s_CurveViewport);
-        const double w = s_CurveView[3][3];
-        const glm::dvec4 origin = s_CurveView * glm::dvec4(0, 0, z, 1);
-        const glm::dmat3 toPixels(
-            glm::dvec3(s_CurveView[0][0] * viewport.x / (2 * w), s_CurveView[0][1] * viewport.y / (2 * w), 0),
-            glm::dvec3(s_CurveView[1][0] * viewport.x / (2 * w), s_CurveView[1][1] * viewport.y / (2 * w), 0),
-            glm::dvec3((origin.x / w + 1) * viewport.x * 0.5, (origin.y / w + 1) * viewport.y * 0.5, 1));
+        const glm::dmat4 model(transform);
+        const glm::dmat4 clipFromLocal = s_CurveView * model;
+        // Homography of the local XY plane. Keeping W allows perspective views
+        // while the existing tessellator still works with constant pixel widths.
+        auto pixelColumn = [&](int column) {
+            const auto c = clipFromLocal[column];
+            return glm::dvec3((c.x + c.w) * viewport.x * 0.5,
+                             (c.y + c.w) * viewport.y * 0.5, c.w);
+        };
+        const glm::dmat3 toPixels(pixelColumn(0), pixelColumn(1), pixelColumn(3));
         const double determinant = glm::determinant(toPixels);
-        if (!std::isfinite(determinant) || determinant == 0.0) throw std::invalid_argument("Projection du plan de courbe non inversible");
-        const glm::dmat3 toWorld = glm::inverse(toPixels);
+        const double magnitude = glm::length(toPixels[0]) * glm::length(toPixels[1]) * glm::length(toPixels[2]);
+        // A plane seen edge-on (or scaled to zero) has no drawable area.
+        if (!std::isfinite(determinant) || std::abs(determinant) <= 1e-12 * magnitude) return mesh;
+        const glm::dmat3 toLocal = glm::inverse(toPixels);
 
-        auto vertex = [&](const glm::dvec2& p) {
-            const glm::dvec3 world = toWorld * glm::dvec3(p, 1);
+        CurvePath screenPath;
+        const glm::dvec2 margin = (halfWidth * std::max(1.0f, style.MiterLimit) + 2.0) * 2.0 / viewport;
+        auto clipSegment = [&](const glm::dvec4& a, const glm::dvec4& b, double& first, double& last) {
+            const auto distances = [&](const glm::dvec4& p) {
+                return std::array<double, 7>{p.w - 1e-7, p.z + p.w, p.w - p.z,
+                    p.x + (1.0 + margin.x) * p.w, (1.0 + margin.x) * p.w - p.x,
+                    p.y + (1.0 + margin.y) * p.w, (1.0 + margin.y) * p.w - p.y};
+            };
+            const auto da = distances(a), db = distances(b);
+            first = 0.0; last = 1.0;
+            for (size_t i = 0; i < da.size(); ++i) {
+                if (!std::isfinite(da[i]) || !std::isfinite(db[i])) return false;
+                if (da[i] < 0.0 && db[i] < 0.0) return false;
+                if ((da[i] < 0.0) != (db[i] < 0.0)) {
+                    const double t = da[i] / (da[i] - db[i]);
+                    if (da[i] < 0.0) first = std::max(first, t);
+                    else last = std::min(last, t);
+                }
+            }
+            return first <= last;
+        };
+        auto project = [&](const glm::dvec4& p) {
+            return (glm::dvec2(p) / p.w + glm::dvec2(1.0)) * viewport * 0.5;
+        };
+        // Clip before division by W. Split invisible runs instead of connecting
+        // points through the camera or across a hidden section of a closed path.
+        for (const auto& contour : path.Contours) {
+            if (contour.Points.size() < 2) continue;
+            std::vector<CurveContour> runs;
+            CurveContour run;
+            auto finish = [&]() {
+                if (run.Points.size() >= 2) runs.push_back(std::move(run));
+                run = CurveContour{};
+            };
+            const size_t count = contour.Closed ? contour.Points.size() : contour.Points.size() - 1;
+            for (size_t i = 0; i < count; ++i) {
+                const auto a = clipFromLocal * glm::dvec4(contour.Points[i], 0.0, 1.0);
+                const auto b = clipFromLocal * glm::dvec4(contour.Points[(i + 1) % contour.Points.size()], 0.0, 1.0);
+                double first, last;
+                if (!clipSegment(a, b, first, last)) { finish(); continue; }
+                const glm::dvec2 start = project(a + (b - a) * first);
+                const glm::dvec2 end = project(a + (b - a) * last);
+                if (!run.Points.empty() && glm::length(start - run.Points.back()) > PointEpsilon) finish();
+                if (run.Points.empty()) run.Points.push_back(start);
+                if (glm::length(end - run.Points.back()) > PointEpsilon) run.Points.push_back(end);
+                if (last < 1.0) finish();
+            }
+            finish();
+            if (contour.Closed && runs.size() > 1 &&
+                glm::length(runs.back().Points.back() - runs.front().Points.front()) <= PointEpsilon) {
+                auto merged = std::move(runs.back().Points);
+                merged.insert(merged.end(), runs.front().Points.begin() + 1, runs.front().Points.end());
+                runs.front().Points = std::move(merged);
+                runs.pop_back();
+            }
+            for (auto& part : runs) {
+                if (contour.Closed && glm::length(part.Points.front() - part.Points.back()) <= PointEpsilon) {
+                    part.Closed = true;
+                    part.Points.pop_back();
+                }
+                screenPath.Contours.push_back(std::move(part));
+            }
+        }
+
+        auto vertex = [&](const glm::dvec2& p, glm::vec3& result) {
+            const glm::dvec3 local = toLocal * glm::dvec3(p, 1);
+            if (!std::isfinite(local.z) || local.z <= 1e-12) return false;
+            const glm::dvec4 world = model * glm::dvec4(local.x / local.z, local.y / local.z, 0.0, 1.0);
             const double maxFloat = (std::numeric_limits<float>::max)();
-            if (!std::isfinite(world.x) || !std::isfinite(world.y) || std::abs(world.x) > maxFloat || std::abs(world.y) > maxFloat)
-                throw std::overflow_error("Sommet de courbe hors limites");
-            return glm::vec3(static_cast<float>(world.x), static_cast<float>(world.y), z); };
+            for (int i = 0; i < 3; ++i)
+                if (!std::isfinite(world[i]) || std::abs(world[i]) > maxFloat) return false;
+            result = glm::vec3(world);
+            return true;
+        };
         auto triangle = [&](glm::dvec2 a, glm::dvec2 b, glm::dvec2 c) {
             const double area = Cross(b - a, c - a);
             if (std::abs(area) < 1e-12) return;
             if (area < 0) std::swap(b, c); // Sens antihoraire a l'ecran.
+            glm::vec3 wa, wb, wc;
+            if (!vertex(a, wa) || !vertex(b, wb) || !vertex(c, wc)) return;
             if (mesh.Positions.size() > (std::numeric_limits<uint32_t>::max)() - 3u)
                 throw std::overflow_error("Maillage de courbe trop grand");
             const auto base = static_cast<uint32_t>(mesh.Positions.size());
-            mesh.Positions.push_back(vertex(a));
-            mesh.Positions.push_back(vertex(b));
-            mesh.Positions.push_back(vertex(c));
+            mesh.Positions.push_back(wa);
+            mesh.Positions.push_back(wb);
+            mesh.Positions.push_back(wc);
             mesh.Indices.insert(mesh.Indices.end(), {base, base + 1, base + 2});
         };
         const double maxArcStep = std::max(1e-3, std::min( constants::Pi / 8.0, 2.0 * std::acos(std::clamp(1.0 - 0.25 / halfWidth, -1.0, 1.0))));
@@ -115,13 +193,13 @@ namespace scivibe{
             double Length;
             glm::dvec2 StartLeft, StartRight, EndLeft, EndRight;
         };
-        for (const CurveContour& contour : path.Contours) {
+        for (const CurveContour& contour : screenPath.Contours) {
             std::vector<glm::dvec2> points;
             for (const glm::dvec2& p : contour.Points) {
                 if (!std::isfinite(p.x) || !std::isfinite(p.y))
                     throw std::invalid_argument(
                         "Point non fini : separer les branches avant BuildStroke");
-                const glm::dvec2 screen(toPixels * glm::dvec3(p, 1));
+                const glm::dvec2 screen = p;
                 if (!std::isfinite(screen.x) || !std::isfinite(screen.y))
                     throw std::overflow_error("Projection de courbe hors limites");
                 if (points.empty() || glm::length(screen - points.back()) > PointEpsilon)
@@ -208,23 +286,28 @@ namespace scivibe{
         }
         return mesh;
     }
-    void RendererCurve2D::DrawCarthesian(const glm::dvec2& center,const glm::dvec2 size,const glm::dvec2 maille,const CurveStyle& style,const glm::dvec2 depassement,const glm::vec2 direction){
+    void RendererCurve2D::DrawCarthesian(const glm::dvec2& center,const glm::dvec2 size,const glm::dvec2 maille,const CurveStyle& style,const glm::dvec2 depassement,const glm::vec2 direction,const glm::mat4& transform){
+        if (!std::isfinite(size.x) || !std::isfinite(size.y) || size.x < 0 || size.y < 0 ||
+            size.x > 1000 || size.y > 1000 || !std::isfinite(maille.x) || !std::isfinite(maille.y) ||
+            maille.x <= 0 || maille.y <= 0) return;
         const glm::dvec2 dirX(std::cos(direction.x),std::sin(direction.x));
-        const glm::dvec2 dirY(-std::sin(direction.y), std::cos(direction.y));
+        const glm::dvec2 dirY(std::cos(direction.y), std::sin(direction.y));
+        CurvePath grid;
         const double lengthX = maille.x * (size.x + depassement.x);
         const double lengthY = maille.y * (size.y + depassement.y);
         for (int i = -static_cast<int>(size.x); i <= static_cast<int>(size.x); ++i){
             const glm::dvec2 offset =  static_cast<double>(i) * maille.x * dirX;
             const glm::dvec2 start = center + offset - lengthY * dirY;
             const glm::dvec2 end   = center + offset + lengthY * dirY;
-            DrawLine(start, end, style);
+            grid.Contours.push_back(CurveContour{{start, end}, false});
         }
         for (int i = -static_cast<int>(size.y); i <= static_cast<int>(size.y); ++i){
             const glm::dvec2 offset = static_cast<double>(i) * maille.y * dirY;
             const glm::dvec2 start = center + offset - lengthX * dirX;
             const glm::dvec2 end   = center + offset + lengthX * dirX;
-            DrawLine(start, end, style);
+            grid.Contours.push_back(CurveContour{{start, end}, false});
         }
+        DrawPath(grid, style, transform);
     }
     void RendererCurve2D::DrawRepere(const Repere& repere, const CurveStyle& style){
         switch (repere.m_type)
@@ -232,7 +315,9 @@ namespace scivibe{
         case Repere::Type::carthesian :
             CurveStyle styleCopie = style;
             styleCopie.WidthPixels = repere.m_Thickness;
-            DrawCarthesian(repere.m_Position,repere.m_size,repere.m_maille,styleCopie,repere.m_depassement,repere.m_Direction);
+            DrawCarthesian(glm::dvec2(repere.m_Position), repere.m_size, repere.m_maille,
+                styleCopie, repere.m_depassement, repere.m_Direction,
+                glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, repere.m_Position.z)));
             break;
         /*case Repere::Type::polar:
             SCIVIBE_CORE_INFO("le repère polaire n'est pas encore écrit");

@@ -103,10 +103,8 @@ namespace scivibe{
     void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform){
         ResetData();
         glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
-
         const auto& spec = Application::Get().GetFrameBuffer()->GetSpecification();
         RendererCurve2D::SetView(viewProj,glm::uvec2{spec.Width, spec.Height});
-
         s_Data.TextureShader->Bind();
         s_Data.TextureShader->SetMat4("uViewProjection",viewProj);
         s_Data.TextShader->Bind();
@@ -121,6 +119,17 @@ namespace scivibe{
         s_Data.TextureShader->SetMat4("uViewProjection",camera.GetViewProjectionMatrix());
         s_Data.TextShader->Bind();
         s_Data.TextShader->SetMat4("uViewProjection",camera.GetViewProjectionMatrix());
+    }
+    void Renderer2D::BeginScene(const EditorCamera& camera){
+        ResetData();
+        const auto& spec = Application::Get().GetFrameBuffer()->GetSpecification();
+        glm::mat4 viewProj = camera.GetViewProjection();
+        RendererCurve2D::SetView(viewProj,glm::uvec2{spec.Width, spec.Height});
+        s_Data.TextureShader->Bind();
+        s_Data.TextureShader->SetMat4("uViewProjection",viewProj);
+        s_Data.TextShader->Bind();
+        s_Data.TextShader->SetMat4("uViewProjection",viewProj);
+        
     }
     void Renderer2D::SwitchState(PossibleState state){
         switch (state)
@@ -394,6 +403,13 @@ namespace scivibe{
             glm::scale(glm::mat4(1.0f),{size.x,size.y,1.0f});
         Renderer2D::QuadInfo info{ color, textureIndex, tintColor, textScale, uvMin, uvMax};
         Renderer2D::RenderQuad(info, transform);
+    }
+    void Renderer2D::DrawGlyphSDF(const glm::mat4& transform, const Ref<Texture2D>& texture,
+        const glm::vec2& uvMin, const glm::vec2& uvMax, const glm::vec4& tintColor) {
+        VerifyState(PossibleState::Text);
+        const float textureIndex = PrepareQuad(texture);
+        QuadInfo info{glm::vec4(1.0f), textureIndex, tintColor, 1.0f, uvMin, uvMax};
+        RenderQuad(info, transform);
     }
     void Renderer2D::Write(std::u32string_view text, Font& font, const glm::vec3& position,const float scale, const glm::vec4& color){
         glm::vec2 pen{position.x, position.y};

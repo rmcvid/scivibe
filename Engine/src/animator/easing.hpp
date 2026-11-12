@@ -1,5 +1,6 @@
 #pragma once
 #include "pch/pch.hpp"
+#include <cmath>
 namespace scivibe {
     enum class EasingType {
         Linear,

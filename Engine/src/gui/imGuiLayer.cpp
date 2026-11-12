@@ -6,6 +6,7 @@
 
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_glfw.h"
+#include "ImGuizmo.h"
 
 // glat and glfw does not need to be included ici
 namespace scivibe{
@@ -61,6 +62,7 @@ namespace scivibe{
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+        ImGuizmo::BeginFrame();
     }
     void ImGuiLayer::End(){
         ImGuiIO& io = ImGui::GetIO(); (void ) io;

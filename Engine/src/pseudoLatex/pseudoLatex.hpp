@@ -36,6 +36,11 @@ namespace scivibe{
             static void Init(const LatexSettings& settings = {});
             static void Shutdown();
             static Ref<LatexFormula> Create(std::string_view source);
+            static Ref<LatexFormula> Create(std::string_view source,float fontSize, int maxWidth, float lineSpacing);
+            
+            static void Write(std::string_view source, const glm::vec3& position,float fontSize, int maxWidth, float lineSpacing);
+            static void Write(std::string_view source, const glm::mat4& transform,float fontSize, int maxWidth, float lineSpacing,
+                const glm::vec4& tint = glm::vec4(1.0f));
             static void Write(const LatexFormula& formula,const glm::vec3& position);
             static void Write(std::string_view source,const glm::vec3& position);
             static void WriteFromFile(std::string filePath, const glm::vec3& position);

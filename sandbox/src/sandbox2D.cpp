@@ -1,6 +1,8 @@
 #include "sandbox2D.hpp"
 #include <exception>
+#include <algorithm>
 #include <imgui.h>
+#include <imgui_internal.h>
 #include "plateform/OpenGl/OpenGLShader.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -10,6 +12,7 @@
 #include <cfloat>
 #include <cstdint>
 #include <cmath>
+#include "ImGuizmo.h"
 
 
 
@@ -24,14 +27,18 @@ void Sandbox2D::OnAttach(){
     m_TextureTest = scivibe::Texture2D::Create(IMAGE_SANDBOX_PATH "chess.png");
     m_Font = scivibe::CreateRef<scivibe::Font>( FONT_SANDBOX_PATH "STIXTwoMath-Regular.ttf", 112 );
     scivibe::LatexSettings settings;
-    settings.TextSize = 36.0f;
+    settings.TextSize = 62.0f;
     settings.RasterSize = 112;
     settings.UnitsPerPixel = 0.005f;
     scivibe::PseudoLatex::Init(settings);
     m_PsFile.Load(TEXT_SANDBOX_PATH "test.ps");
     m_ActiveScene = scivibe::CreateRef<scivibe::Scene>();
     const auto& renderSize = scivibe::Application::Get().GetFrameBuffer()->GetSpecification();
+    m_EditorCamera = scivibe::EditorCamera(30.0f,
+        static_cast<float>(renderSize.Width) / renderSize.Height, 0.1f, 1000.0f);
+    m_EditorCamera.SetViewportSize(renderSize.Width, renderSize.Height);
     m_ActiveScene->OnViewPortResize(renderSize.Width, renderSize.Height);
+
     #if 0
     m_Line = scivibe::Line({-0.75,-0.75}, { 0.75,0.75},scivibe::Color::Green,10.0f);
     scivibe::Line destination = m_Line;
@@ -101,27 +108,26 @@ void Sandbox2D::OnUpdate(scivibe::Timestep ts ){
     
     const auto framebuffer = app.GetFrameBuffer();
     const auto& renderSize = framebuffer->GetSpecification();
-    if (m_ViewPortSize.x >= 1.0f && m_ViewPortSize.y >= 1.0f) {
-        const auto width = static_cast<uint32_t>(m_ViewPortSize.x);
-        const auto height = static_cast<uint32_t>(m_ViewPortSize.y);
+    // The panel only scales the preview; it never changes the captured image size.
+    if (!app.IsRecorderInitialized() &&
+        (renderSize.Width != m_RenderResolution.x || renderSize.Height != m_RenderResolution.y)) {
+        framebuffer->Resize(m_RenderResolution.x, m_RenderResolution.y);
+        m_EditorCamera.SetViewportSize(renderSize.Width, renderSize.Height);
+        m_ActiveScene->OnViewPortResize(renderSize.Width, renderSize.Height);
+    }
+    if (m_ResizeViewportRequested) {
+        ResizeViewportToRecording();
+        m_ResizeViewportRequested = false;
+    }
+    // Middle-button navigation takes precedence over manipulating an entity.
+    ImGuizmo::Enable(!scivibe::Input::IsMouseButtonPressed(SCIVIBE_MOUSE_BUTTON_MIDDLE));
+    m_EditorCamera.OnUpdate(ts,
+        m_ViewPortHovered && !ImGuizmo::IsUsing() && !ImGui::GetIO().WantTextInput);
 
-        if (renderSize.Width != width || renderSize.Height != height) {
-            framebuffer->Resize(width, height);
-            m_ActiveScene->OnViewPortResize(
-                renderSize.Width, renderSize.Height);
-        }
-    }
-    //update
-    if(m_ViewPortFocused){
-        m_CameraController.OnResize(static_cast<float>(renderSize.Width), static_cast<float>(renderSize.Height));
-        m_CameraController.OnUpdate(ts);
-    }
     app.GetFrameBuffer()->Bind();
-    //m_FrameBuffer->Bind();
     scivibe::RenderCommand::SetClearColor({0.0f,0.0f,0.0f,1.0f});
     scivibe::RenderCommand::Clear();
-    //scivibe::Renderer2D::BeginScene(m_CameraController.GetCamera());
-    m_ActiveScene->OnUpdate(ts);
+    m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
     auto now = std::chrono::steady_clock::now();
     float time = std::chrono::duration<float>( now.time_since_epoch() ).count();
     //scivibe::Renderer2D::DrawQuad({1.0f, 1.0f, -0.1f},{std::sinf(time) * 1.0f, std::sinf(time)* 1.0f},time,m_TextureTest, 10.0f,{0.3f,0.3f,0.3f,1.0f});
@@ -148,8 +154,69 @@ void Sandbox2D::OnUpdate(scivibe::Timestep ts ){
     app.GetFrameBuffer()->Unbind();
 }
 
+void Sandbox2D::ResizeViewportToRecording() {
+    ImGuiWindow* viewportWindow = ImGui::FindWindowByName("ViewPort");
+    if (!viewportWindow || m_ViewPortSize.x <= 0.0f || m_ViewPortSize.y <= 0.0f)
+        return;
+
+    const auto& spec = scivibe::Application::Get().GetFrameBuffer()->GetSpecification();
+    const ImVec2 pixelScale = ImGui::GetIO().DisplayFramebufferScale;
+    const ImVec2 delta{
+        spec.Width / std::max(pixelScale.x, 0.01f) - m_ViewPortSize.x,
+        spec.Height / std::max(pixelScale.y, 0.01f) - m_ViewPortSize.y
+    };
+
+    ImGuiDockNode* root = viewportWindow->DockNode;
+    if (!root) {
+        // A floating panel needs its title bar and borders in addition to the image.
+        ImGui::SetWindowSize(viewportWindow, ImVec2{
+            viewportWindow->SizeFull.x + delta.x, viewportWindow->SizeFull.y + delta.y});
+        return;
+    }
+
+    // Give the size change to the viewport branch, preserving neighbouring panels.
+    // ImGui normally distributes resizing between dock nodes according to ratios.
+    while (root->ParentNode) {
+        ImGuiDockNode* parent = root->ParentNode;
+        ImGuiDockNode* sibling = parent->ChildNodes[parent->ChildNodes[0] == root ? 1 : 0];
+        root->WantLockSizeOnce = false;
+        sibling->WantLockSizeOnce = true;
+        root = parent;
+    }
+
+    if (root->IsDockSpace() && root->HostWindow &&
+        root->HostWindow->Viewport == ImGui::GetMainViewport()) {
+        auto& window = scivibe::Application::Get().GetWindow();
+        window.SetSize(
+            static_cast<uint32_t>(std::max(1.0f, std::round(window.GetWidth() + delta.x))),
+            static_cast<uint32_t>(std::max(1.0f, std::round(window.GetHeight() + delta.y))));
+    } else {
+        // A detached dock group owns a separate ImGui platform window.
+        ImGui::DockBuilderSetNodeSize(root->ID, ImVec2{
+            root->Size.x + delta.x, root->Size.y + delta.y});
+    }
+}
+void Sandbox2D::ImportText() {
+    scivibe::PsFile file;
+    if (!file.Load(TEXT_SANDBOX_PATH "test.ps"))
+        return;
+    for (size_t i = 0; i < file.GetParagraphCount(); ++i) {
+        const auto& source = file.GetParagraph(i);
+        if (source.empty())continue;
+        auto entity = m_ActiveScene->CreateEntity( "Texte " + std::to_string(i + 1));
+        entity.AddComponent<scivibe::TextComponent>().Source = source;
+        auto& transform = entity.GetComponent<scivibe::TransformComponent>();
+        transform.Translation = {-3.0f,2.0f - static_cast<float>(i) * 1.5f,0.0f};
+    }
+}
 
 void Sandbox2D::OnImGuiRender(){
+    // ImGui receives keys even while the engine layer blocks editor events.
+    // Leave arrow keys to text fields and active numeric controls while editing.
+    if (!ImGui::GetIO().WantTextInput && !ImGui::IsAnyItemActive() && !ImGuizmo::IsUsing()) {
+        if (ImGui::IsKeyPressed(ImGuiKey_RightArrow, false)) m_ActiveScene->SetCurrentSlide(m_ActiveScene->GetCurrentSlide() + 1);
+        if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow, false)) m_ActiveScene->SetCurrentSlide(m_ActiveScene->GetCurrentSlide() - 1);
+    }
     ImGui::SetNextWindowSizeConstraints(ImVec2(400.0f, 360.0f), ImVec2(FLT_MAX, FLT_MAX));
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
     
@@ -195,9 +262,12 @@ void Sandbox2D::OnImGuiRender(){
             if (ImGui::MenuItem("Open..", "Ctrl+O")) {
                 OpenScene();
             }
-
+             if (ImGui::MenuItem("Importer les textes")) {
+                ImportText();
+            }
             if(ImGui::MenuItem("Exit")) scivibe::Application::Get().Close();
             ImGui::EndMenu();
+           
         }
         ImGui::EndMenuBar();
     }
@@ -207,16 +277,17 @@ void Sandbox2D::OnImGuiRender(){
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0,0});
     const bool viewportVisible = ImGui::Begin("ViewPort", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     m_ViewPortFocused = ImGui::IsWindowFocused();
-    m_ViewPortHovered = ImGui::IsWindowHovered();
-    scivibe::Application::Get().GetImGuiLayer()->SetBlockEvents(!m_ViewPortFocused || !m_ViewPortHovered);
+    m_ViewPortHovered = false;
     const ImVec2 viewportPanelSize = viewportVisible ? ImGui::GetContentRegionAvail() : ImVec2{0, 0};
     m_ViewPortSize = {std::max(0.0f, viewportPanelSize.x), std::max(0.0f, viewportPanelSize.y)};
     const auto framebuffer = scivibe::Application::Get().GetFrameBuffer();
     const auto& spec = framebuffer->GetSpecification();
+    ImVec2 imagePosition{0.0f, 0.0f};
+    ImVec2 imageSize{0.0f, 0.0f};
     if (m_ViewPortSize.x > 0.0f && m_ViewPortSize.y > 0.0f && spec.Width > 0 && spec.Height > 0) {
         // Show precisely the recorded image, with margins instead of stretching it.
         const float scale = std::min(m_ViewPortSize.x / spec.Width, m_ViewPortSize.y / spec.Height);
-        const ImVec2 imageSize{spec.Width * scale, spec.Height * scale};
+        imageSize = ImVec2{spec.Width * scale, spec.Height * scale};
         const ImVec2 origin = ImGui::GetCursorPos();
         ImGui::SetCursorPos(ImVec2{
             origin.x + (m_ViewPortSize.x - imageSize.x) * 0.5f,
@@ -224,21 +295,77 @@ void Sandbox2D::OnImGuiRender(){
         });
         const ImTextureID textureID = reinterpret_cast<ImTextureID>(
             static_cast<std::uintptr_t>(framebuffer->GetColorAttachmentRendererID()));
+        imagePosition = ImGui::GetCursorScreenPos();
         ImGui::Image(textureID, imageSize, ImVec2{0,1}, ImVec2{1,0});
+        m_ViewPortHovered = ImGui::IsItemHovered();
     }
+    scivibe::Application::Get().GetImGuiLayer()->SetBlockEvents(!m_ViewPortFocused && !m_ViewPortHovered);
+    //Guizmos
+    scivibe::Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+    if(selectedEntity && !m_ActiveScene->HasAnimatedPose(selectedEntity) && m_GuizmoType != -1 && imageSize.x > 0.0f && imageSize.y > 0.0f &&
+       !scivibe::Input::IsMouseButtonPressed(SCIVIBE_MOUSE_BUTTON_MIDDLE)){
+
+        const glm::mat4 cameraProjection = m_EditorCamera.GetProjection();
+        glm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
+
+        ImGuizmo::SetOrthographic(false);
+        ImGuizmo::SetDrawlist();
+        ImGuizmo::SetRect(imagePosition.x, imagePosition.y, imageSize.x, imageSize.y);
+        
+        //entity
+        auto& tc = selectedEntity.GetComponent<scivibe::TransformComponent>();
+        glm::mat4 transform = tc.GetTransform();
+        
+        //snapping
+        bool snap = scivibe::Input::IsKeyPressed(SCIVIBE_KEY_LEFT_CONTROL);
+        float snapValue = 0.5f; //snap to 0.5m
+        if(m_GuizmoType == ImGuizmo::OPERATION::ROTATE) snapValue = 45.0f;
+        
+        float snapValues[3] = {snapValue,snapValue,snapValue};
+        ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection), 
+            (ImGuizmo::OPERATION)m_GuizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform), 
+            nullptr, snap ? snapValues : nullptr);
+
+        if(ImGuizmo::IsUsing()){
+            glm::vec3 translation, rotation, scale; 
+            if (scivibe::Math::DecomposeTransform(transform,translation, rotation, scale)) {
+                tc.Translation = translation;
+                tc.Rotation = rotation;
+                tc.Scale = scale;
+            }
+        }
+
+    }
+
     ImGui::PopStyleVar();
     ImGui::End();
 
     m_SceneHierarchyPanel.OnImGuiRender();
 
     ImGui::Begin("Settings");
+    int slide = m_ActiveScene->GetCurrentSlide();
+    ImGui::Text("Slide %d", slide);
+    ImGui::BeginDisabled(slide <= 1);
+    if (ImGui::Button("< Precedente")) m_ActiveScene->SetCurrentSlide(slide - 1);
+    ImGui::EndDisabled();
+    ImGui::SameLine();
+    if (ImGui::Button("Suivante >")) m_ActiveScene->SetCurrentSlide(slide + 1);
+    slide = m_ActiveScene->GetCurrentSlide();
+    if (ImGui::InputInt("Numero de slide", &slide)) m_ActiveScene->SetCurrentSlide(slide);
+    bool animateSlides = m_ActiveScene->GetAnimateSlides();
+    if (ImGui::Checkbox("Apercu des animations", &animateSlides)) m_ActiveScene->SetAnimateSlides(animateSlides);
+    if (ImGui::Button("Rejouer la slide")) m_ActiveScene->RestartSlideAnimations();
+    if (ImGui::Button("Reinitialiser les valeurs animees")) m_ActiveScene->ResetAnimationPreview();
+    ImGui::TextWrapped("Desactiver l'apercu pour modifier les transformations avec les gizmos.");
+    ImGui::Separator();
     auto stats = scivibe::Renderer2D::GetStats();
     ImGui::Text("Renderer2D stats:");
     ImGui::Text("DrawCalls %d",stats.DrawCalls);
     ImGui::Text("Quads %d: ",stats.QuadCount);
     ImGui::Text("Vertices %d", stats.GetTotalVertexCount());
     ImGui::Text("Indices %d", stats.GetTotalIndexCount());
-
+#if 0
+// ici il faudrait remettre ces animations et ce suivit d'affichage dans le panneau du imgui
     ImGui::Separator();
     ImGui::BeginDisabled(!m_LineAnimation.has_value());
     if (ImGui::Button("Reset animation") && m_LineAnimation)
@@ -259,8 +386,7 @@ void Sandbox2D::OnImGuiRender(){
     }else{
         ImGui::TextUnformatted("Aucun paragraphe");
     }
-
-
+#endif
     ImGui::Separator();
 
     ImGui::Text("Frame timing");
@@ -278,7 +404,22 @@ void Sandbox2D::OnImGuiRender(){
     ImGui::Separator();
     const auto& imageSpec = app.GetFrameBuffer()->GetSpecification();
     ImGui::Text("Image : %u x %u px", imageSpec.Width, imageSpec.Height);
+    ImGui::Text("Zone viewport : %.0f x %.0f px",
+        m_ViewPortSize.x * ImGui::GetIO().DisplayFramebufferScale.x,
+        m_ViewPortSize.y * ImGui::GetIO().DisplayFramebufferScale.y);
     ImGui::TextDisabled("Format video fixe : 16:9.");
+    ImGui::BeginDisabled(app.IsRecorderInitialized());
+    int resolutionIndex = m_RenderResolution.x == 1920 ? 1 : m_RenderResolution.x == 2560 ? 2 : 0;
+    const char* resolutions[] = {"1280 x 720", "1920 x 1080", "2560 x 1440"};
+    if (ImGui::Combo("Resolution video", &resolutionIndex, resolutions, 3)) {
+        const glm::uvec2 sizes[] = {{1280, 720}, {1920, 1080}, {2560, 1440}};
+        m_RenderResolution = sizes[resolutionIndex];
+    }
+    ImGui::EndDisabled();
+    if (ImGui::Button("Resize viewport")){
+        m_ResizeViewportRequested = true;
+    }
+
     try {
         if (app.IsRecording()) {
             ImGui::TextUnformatted("Enregistrement en cours");
@@ -290,7 +431,11 @@ void Sandbox2D::OnImGuiRender(){
             if (ImGui::Button("Annuler")) app.StopRecording();
         } else {
             ImGui::TextUnformatted("Enregistrement non initialise");
-            if (ImGui::Button("Init")) app.InitRecording(VIDEO_SANDBOX_PATH "capture.mp4",60);
+            // Apply any new resolution in OnUpdate before initializing the encoder.
+            ImGui::BeginDisabled(imageSpec.Width != m_RenderResolution.x || imageSpec.Height != m_RenderResolution.y);
+            const bool initializeRecording = ImGui::Button("Init");
+            ImGui::EndDisabled();
+            if (initializeRecording) app.InitRecording(VIDEO_SANDBOX_PATH "capture.mp4",60);
         } 
     }catch (const std::exception& error) {
         SCIVIBE_ERROR("Enregistrement : {}", error.what());
@@ -300,7 +445,8 @@ void Sandbox2D::OnImGuiRender(){
 };
 void Sandbox2D::NewScene(){
     m_ActiveScene = scivibe::CreateRef<scivibe::Scene>();
-    m_ActiveScene->OnViewPortResize((uint32_t) m_ViewPortSize.x, (uint32_t) m_ViewPortSize.y );
+    const auto& size = scivibe::Application::Get().GetFrameBuffer()->GetSpecification();
+    m_ActiveScene->OnViewPortResize(size.Width, size.Height);
     m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 }
 void Sandbox2D::SaveSceneAs(){
@@ -327,7 +473,7 @@ void Sandbox2D::OpenScene(){
 }
 
 bool Sandbox2D::OnKeyPressed(scivibe::KeyPressedEvent& e){
-    if(e.GetRepeatCount() > 0) return false;
+    if(e.GetRepeatCount() > 0 || ImGui::GetIO().WantTextInput) return false;
     bool control = scivibe::Input::IsKeyPressed(SCIVIBE_KEY_LEFT_CONTROL) || scivibe::Input::IsKeyPressed(SCIVIBE_KEY_RIGHT_CONTROL);
     bool shift = scivibe::Input::IsKeyPressed(SCIVIBE_KEY_LEFT_SHIFT) || scivibe::Input::IsKeyPressed(SCIVIBE_KEY_RIGHT_SHIFT);
     switch (e.GetKeyCode()){
@@ -344,15 +490,29 @@ bool Sandbox2D::OnKeyPressed(scivibe::KeyPressedEvent& e){
             if(control && shift) SaveSceneAs();
             return true;
         }
+        case SCIVIBE_KEY_Q :
+            m_GuizmoType = -1;
+            return true;
+        case SCIVIBE_KEY_W :
+            m_GuizmoType = ImGuizmo::OPERATION::TRANSLATE;
+            return true;
+        case SCIVIBE_KEY_E :
+            m_GuizmoType = ImGuizmo::OPERATION::ROTATE;
+            return true;
+        case SCIVIBE_KEY_R :
+            m_GuizmoType = ImGuizmo::OPERATION::SCALE;
+            return true;
         case SCIVIBE_KEY_SPACE:
-            m_ActiveScene->OnViewPortResize((uint32_t) m_ViewPortSize.x, (uint32_t) m_ViewPortSize.y );
+            if (!m_ViewPortFocused) return false;
+            m_ResizeViewportRequested = true;
             return true;
         default:
             return false;
     }
 }
 void Sandbox2D::OnEvent(scivibe::Event& e){
-    m_CameraController.OnEvent(e);
+    if (m_ViewPortHovered && !ImGuizmo::IsUsing() && !ImGui::GetIO().WantTextInput)
+        m_EditorCamera.OnEvent(e);
     scivibe::EventDispatcher dispatcher(e);
     dispatcher.Dispatch<scivibe::KeyPressedEvent>(SCIVIBE_BIND_EVENT_FN(Sandbox2D::OnKeyPressed));
 };

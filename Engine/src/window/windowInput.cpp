@@ -21,12 +21,12 @@ namespace scivibe{
         glfwGetCursorPos(window,&xpos,&ypos);
         return {(float)xpos,(float) ypos};
     }
-    bool Input::GetMouseX() {
+    float Input::GetMouseX() {
         auto[x,y] = GetMousePosition();
         return x;
 
     }
-    bool Input::GetMouseY() {
+    float Input::GetMouseY() {
         auto[x,y] = GetMousePosition();
         return y;
     }

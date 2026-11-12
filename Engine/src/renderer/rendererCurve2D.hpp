@@ -46,13 +46,14 @@ namespace scivibe {
             static void DrawLine(const Line& line);
             static void DrawPolyline(const std::vector<glm::dvec2>& points,const CurveStyle& style,bool closed = false,float z = 0.0f);
             static void DrawPath(const CurvePath& path,const CurveStyle& style,float z = 0.0f);
-            static void DrawCarthesian(const glm::dvec2& center, const glm::dvec2 size, const glm::dvec2 maille = {1,1}, const CurveStyle& style = s_CurveStyle, const glm::dvec2 depassement = {0,0}, const glm::vec2 direction = {0,constants::Pi/2});
+            static void DrawPath(const CurvePath& path, const CurveStyle& style, const glm::mat4& transform);
+            static void DrawCarthesian(const glm::dvec2& center, const glm::dvec2 size, const glm::dvec2 maille = {1,1}, const CurveStyle& style = s_CurveStyle, const glm::dvec2 depassement = {0,0}, const glm::vec2 direction = {0,constants::Pi/2}, const glm::mat4& transform = glm::mat4(1.0f));
             static void DrawRepere(const Repere& repere, const CurveStyle& style = s_CurveStyle);
         
             private:
             friend class Renderer2D;
             static void SetView(const glm::mat4& viewProjection,const glm::uvec2& framebufferSize);
-            static CurveMesh BuildStroke(const CurvePath& path,const CurveStyle& style,float z);
+            static CurveMesh BuildStroke(const CurvePath& path,const CurveStyle& style,const glm::mat4& transform);
             static CurveStyle s_CurveStyle;
     };
 }

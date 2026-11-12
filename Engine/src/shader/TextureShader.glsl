@@ -42,4 +42,5 @@ uniform sampler2D uTexture[32];
 void main()
 {
    color = texture(uTexture[int(vTexIndex)],vTexCoord*vScale)*vColor*vTintColor;
+   if (color.a <= 0.0) discard;
 }

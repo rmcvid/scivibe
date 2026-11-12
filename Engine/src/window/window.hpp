@@ -29,6 +29,7 @@ namespace scivibe{
             virtual void WaitEvents(double timeout) = 0;
             virtual unsigned int GetWidth() const = 0;
             virtual unsigned int GetHeight() const = 0;
+            virtual void SetSize(uint32_t width, uint32_t height) = 0;
             virtual void SetEventCallback(const EventCallBackFn& callback)= 0;
             virtual void SetVSync(bool eanbled) = 0;
             virtual bool IsVSync() const = 0;

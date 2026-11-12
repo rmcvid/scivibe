@@ -156,6 +156,13 @@ namespace scivibe{
         else { glfwSwapInterval(0);}
         m_Data.VSync = enabled;
     }
+    void WindowsWindow::SetSize(uint32_t width, uint32_t height){
+        if (width == 0 || height == 0)
+            return;
+        if (glfwGetWindowAttrib(m_Window, GLFW_MAXIMIZED))
+            glfwRestoreWindow(m_Window);
+        glfwSetWindowSize(m_Window, static_cast<int>(width), static_cast<int>(height));
+    }
     bool WindowsWindow::IsVSync() const {
         return m_Data.VSync;
     }
